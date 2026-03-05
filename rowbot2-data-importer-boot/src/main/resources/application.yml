@@ -1,0 +1,20 @@
+build:
+  version: '@project.version@'
+environment:
+  profile: ${ENVIRONMENT_PROFILE:#{'production'}}
+logging:
+  level:
+    root: INFO
+
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+spring:
+  application:
+    name: rowbot2-data-importer
+  jackson:
+    serialization:
+      indent_output: true
+    default-property-inclusion: non_null

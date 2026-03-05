@@ -1,0 +1,8 @@
+environment:
+  profile: local
+logging:
+  level:
+    com.imatia: DEBUG
+    org.springframework.boot.autoconfigure: INFO
+server:
+  port: 8083
