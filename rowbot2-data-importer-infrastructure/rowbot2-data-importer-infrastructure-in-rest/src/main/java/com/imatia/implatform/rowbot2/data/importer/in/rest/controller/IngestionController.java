@@ -17,9 +17,7 @@ public class IngestionController {
 
     @PostMapping("/start")
     public ResponseEntity<String> start(@RequestBody DataSourceConnectionSettings cs) {
-
         asyncService.runAsync(cs);  // returns immediately (async)
-
         return ResponseEntity.ok("Ingestion started");
     }
 }
