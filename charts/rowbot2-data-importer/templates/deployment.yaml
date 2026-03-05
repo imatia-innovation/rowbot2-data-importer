@@ -65,45 +65,6 @@ spec:
             value: {{ (printf "%s" (include "fullname" .)) }}
           - name: HOST
             value: {{ .Values.ingress.host }}
-        {{- if not .Values.tenantManager.enabled }}
-        {{- if .Values.database.service }}
-          - name: DATABASE_SERVICE
-            value: {{ .Values.database.service }}
-        {{- end }}
-          - name: DATABASE_URL
-            value: {{ .Values.database.url }}
-          - name: DATABASE_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.database.secret | default (printf "%s-db-secret" (include "fullname" .)) }}
-                key: user
-          - name: DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.database.secret | default (printf "%s-db-secret" (include "fullname" .)) }}
-                key: password
-        {{- end }}
-        {{- if .Values.tenantManagement.enabled }}
-          - name: APP_DATABASE_SERVICE
-            value: {{ .Values.database.service }}
-          - name: APP_DATABASE_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.database.secret | default (printf "%s-db-secret" (include "fullname" .)) }}
-                key: adminuser
-          - name: APP_DATABASE_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.database.secret | default (printf "%s-db-secret" (include "fullname" .)) }}
-                key: adminpassword
-        {{- if .Values.tenantManagement.migration }}
-          - name: APP_MIGRATION_AUTH
-            valueFrom:
-              secretKeyRef:
-                name: {{ .Values.tenantManagement.migration.secret | default (printf "%s-migration-secret" (include "fullname" .))  }}
-                key: app-migration-auth
-        {{- end }}
-        {{- end }}
         {{- if .Values.jwt.enabled }}
           - name: JWT_PASSWORD
             valueFrom:

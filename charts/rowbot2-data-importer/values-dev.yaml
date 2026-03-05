@@ -46,10 +46,9 @@ readinessProbe:
 ## Adapt resources if needed
 resources:
   limits:
-    cpu: 2000m
     memory: 4096Mi
   requests:
-    cpu: 2000m
+    cpu: 50m
     memory: 4096Mi
 
 jwt:
