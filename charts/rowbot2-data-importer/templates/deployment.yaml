@@ -184,22 +184,6 @@ spec:
                 name: {{ .Values.s3.secret | default  (printf "%s-s3-secret" (include "fullname" .))  }}
                 key: secretKey
         {{- end }}
-        {{- if .Values.ingress.tls.enabled }}
-          - name: TLS
-            value: enabled
-        {{- end }}
-        {{- if .Values.keycloak.admin.enabled }}
-          - name: KEYCLOAK_USERNAME
-            valueFrom:
-              secretKeyRef:
-                name:  {{ .Values.keycloak.admin.secret | default "keycloak" }}
-                key: admin-user
-          - name: KEYCLOAK_PASSWORD
-            valueFrom:
-              secretKeyRef:
-                name:  {{ .Values.keycloak.admin.secret | default "keycloak" }}
-                key: admin-password
-        {{- end }}
           ports:
           - name: http
             containerPort: {{ .Values.service.internalPort }}
