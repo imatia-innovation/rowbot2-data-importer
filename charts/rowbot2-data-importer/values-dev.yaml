@@ -89,9 +89,9 @@ ingress:
     #  cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53 # use cert-manager-letsencrypt-staging-route53 for testing environments
     # host: rowbot2-data-importer.dev.imatia.cloud # restricted to *dev.imatia.com by default in development clusters
     #host: rowbot2-data-importer.cloud.imatia.com # uncomment this when not in AWS clusters
-    # tls:
+  tls:
     #secretName: rowbot2-data-importer-tls # only customize if needed to avoid name conflicts
-  #enabled: true
+    enabled: false
 
 # tenant management. The application is a tenant manager.  see deployment.yaml
 tenantManagement:
