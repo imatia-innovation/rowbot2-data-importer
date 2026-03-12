@@ -13,10 +13,10 @@ public interface PotentialDuplicateRepository extends DatabaseEntityRepository<P
 	@Modifying
 	@Query("DELETE FROM potential_duplicate d " +
 			"WHERE d.entityId IN ( " +
-			"	SELECT e.id FROM entity e, " +
-			" 	namespace n " +
-			"	WHERE n.ownerUserId = ?1 " +
-			"	AND e.namespaceId = n.id )")
+			"\tSELECT e.id FROM entity e CROSS JOIN " +
+			"\tnamespace n " +
+			"\tWHERE n.ownerUserId = ?1 " +
+			"\tAND e.namespaceId = n.id )")
 	void deleteByOwnerId(String userId);
 
 	void deleteByEntityId(Long entityId);

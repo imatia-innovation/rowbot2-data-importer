@@ -18,8 +18,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 			"FROM validation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  validation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -30,8 +30,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 			"FROM validation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  validation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -43,8 +43,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 			"FROM validation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  validation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND n.id = ?2 " +
@@ -56,8 +56,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 
 
 	@Query("SELECT r " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"validation_rule r " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -69,8 +69,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 			"FROM validation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  validation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -83,8 +83,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 			"FROM validation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  validation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -96,8 +96,8 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 
 
 	@Query("SELECT case when count(r)> 0 then true else false end  " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"validation_rule r " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -106,10 +106,10 @@ public interface ValidationRulesRepository extends DatabaseEntityRepository<Vali
 	Boolean existsByIdAndOwnerUserId(Long id, String user);
 
 	@Query("SELECT distinct r " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"validation_rule r " +
-			"JOIN r.datacolumns rc, " +
+			"JOIN r.datacolumns rc CROSS JOIN " +
 			"datacolumn c " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +

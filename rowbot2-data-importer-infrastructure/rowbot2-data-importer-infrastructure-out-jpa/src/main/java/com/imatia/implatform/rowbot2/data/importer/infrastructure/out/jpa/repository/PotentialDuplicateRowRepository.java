@@ -11,19 +11,19 @@ public interface PotentialDuplicateRowRepository extends DatabaseEntityRepositor
 	@Modifying
 	@Query("DELETE FROM potential_duplicate_row r " +
 			"WHERE r.potentialDuplicateId IN ( " +
-			"	SELECT d.id FROM potential_duplicate d " +
-			"	WHERE d.entityId IN ( " +
-			"		SELECT e.id FROM entity e, " +
-			" 		namespace n " +
-			"		WHERE n.ownerUserId = ?1 " +
-			"		AND e.namespaceId = n.id))")
+			"\tSELECT d.id FROM potential_duplicate d " +
+			"\tWHERE d.entityId IN ( " +
+			"\t\tSELECT e.id FROM entity e CROSS JOIN " +
+			"\t\tnamespace n " +
+			"\t\tWHERE n.ownerUserId = ?1 " +
+			"\t\tAND e.namespaceId = n.id))")
 	void deleteByOwnerId(String userId);
 
 	@Modifying
 	@Query("DELETE FROM potential_duplicate_row r " +
 			"WHERE r.potentialDuplicateId IN ( " +
-			"	SELECT d.id FROM potential_duplicate d " +
-			"	WHERE d.entityId = ?1)")
+			"\tSELECT d.id FROM potential_duplicate d " +
+			"\tWHERE d.entityId = ?1)")
 	void deleteByEntityId(Long entityId);
 
 
@@ -32,10 +32,10 @@ public interface PotentialDuplicateRowRepository extends DatabaseEntityRepositor
 	@Modifying
 	@Query("DELETE FROM potential_duplicate_row r " +
 			"WHERE r.datatableId IN ( " +
-			"	SELECT t.id " +
-			"	FROM datasource d " +
-			"	JOIN d.tables t " +
-			"	WHERE d.id = ?1) ")
+			"\tSELECT t.id " +
+			"\tFROM datasource d " +
+			"\tJOIN d.tables t " +
+			"\tWHERE d.id = ?1) ")
 	void deleteByDatasourceId(Long datasourceId);
 
 	@Modifying

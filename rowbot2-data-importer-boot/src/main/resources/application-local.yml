@@ -1,3 +1,14 @@
+dataengine: #TODO: necesario?
+  protocol: http
+  host: localhost
+  port: 8128
+  jwt:
+    pass: dataenginejwtpass
+ccc: #TODO: necesario?
+  server:
+    protocol: http
+    host: localhost
+    port: 8083
 environment:
   profile: local
 logging:

@@ -24,8 +24,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 	void unlinkByDatasourceId(Long datasourceId);
 
 	@Query("SELECT case when count(r)> 0 then true else false end  " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"transformation_rule r " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -37,8 +37,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 			"FROM transformation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  transformation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -49,8 +49,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 			"FROM transformation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  transformation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND n.id = ?2 " +
@@ -64,8 +64,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 			"FROM transformation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  transformation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -78,8 +78,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 			"FROM transformation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  transformation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -93,8 +93,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 			"FROM transformation_rule rule " +
 			"WHERE rule.id IN (" +
 			"  SELECT r.id " +
-			"  FROM namespace n, " +
-			"  attribute a, " +
+			"  FROM namespace n CROSS JOIN " +
+			"  attribute a CROSS JOIN " +
 			"  transformation_rule r " +
 			"  WHERE a.namespaceId = n.id " +
 			"  AND a.id = r.attributeId " +
@@ -105,8 +105,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 	Page<TransformationRuleDBO> findByOwnerUserIdAndNamespaceIdAndSubstring(String user, Long namespaceId, String substr, Pageable pageable);
 
 	@Query("SELECT r " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"transformation_rule r " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -115,10 +115,10 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 	Optional<TransformationRuleDBO> findByIdAndOwner(Long id, String user);
 
 	@Query("SELECT r " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"transformation_rule r " +
-			"JOIN r.datacolumns rc, " +
+			"JOIN r.datacolumns rc CROSS JOIN " +
 			"datacolumn c " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -130,8 +130,8 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 	List<TransformationRuleDBO> findByEntityIdAndAttributeIdAndDatatableIdAndOwnerUserId(Long entityId, Long attributeId, Long datatableId, String currentUserId);
 
 	@Query("SELECT r " +
-			"FROM namespace n, " +
-			"attribute a, " +
+			"FROM namespace n CROSS JOIN " +
+			"attribute a CROSS JOIN " +
 			"transformation_rule r " +
 			"WHERE a.namespaceId = n.id " +
 			"AND a.id = r.attributeId " +
@@ -151,12 +151,13 @@ public interface TransformationRulesRepository extends DatabaseEntityRepository<
 	@Query("DELETE " +
 			"FROM transformation_rule r " +
 			"WHERE r.id IN ( " +
-			"	SELECT tr.id " +
-			"	FROM transformation_rule tr " +
-			"	JOIN tr.datacolumns c " +
-			"	WHERE c.datacolumnId = ?1 " +
-			"	AND tr.attributeId = ?2) ")
+			"\tSELECT tr.id " +
+			"\tFROM transformation_rule tr " +
+			"\tJOIN tr.datacolumns c " +
+			"\tWHERE c.datacolumnId = ?1 " +
+			"\tAND tr.attributeId = ?2) ")
 	void deleteByDatacolumnIdAndAttributeId(Long datacolumnId, Long attributeId);
 
 	List<TransformationRuleDBO> findByNamespaceId(Long namespaceId);
 }
+

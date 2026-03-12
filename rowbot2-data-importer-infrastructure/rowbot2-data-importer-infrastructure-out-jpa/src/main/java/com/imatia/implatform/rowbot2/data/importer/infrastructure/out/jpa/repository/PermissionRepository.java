@@ -32,7 +32,7 @@ public interface PermissionRepository extends DatabaseEntityRepository<Permissio
 	@Query("SELECT distinct pc " +
 			"FROM permission_column pc " +
 			"JOIN pc.groups g " +
-			"WHERE pc.datacolumnId IN (" +
+			"WHERE pc.datacolumnId IN ( " +
 			"  SELECT c.id FROM datacolumn c " +
 			"  WHERE c.datatableId = ?1)" +
 			"AND g.id IN ?2")
@@ -99,7 +99,7 @@ public interface PermissionRepository extends DatabaseEntityRepository<Permissio
 			"c.name as column " +
 			"FROM datasource ds " +
 			"JOIN ds.tables t " +
-			"JOIN t.columns c, " +
+			"JOIN t.columns c CROSS JOIN " +
 			"permission_column p " +
 			"WHERE c.id = p.datacolumnId")
 	Page<Map<String, Object>> findPermissions(Pageable pageable);
@@ -109,12 +109,12 @@ public interface PermissionRepository extends DatabaseEntityRepository<Permissio
 			"c.name as column " +
 			"FROM datasource ds " +
 			"JOIN ds.tables t " +
-			"JOIN t.columns c, " +
+			"JOIN t.columns c CROSS JOIN " +
 			"permission_column p " +
 			"WHERE c.id = p.datacolumnId AND ( " +
 			"  UPPER(c.name) like UPPER(concat('%', ?1,'%')) " +
 			"  or UPPER(t.originalTableName) like UPPER(concat('%', ?1,'%')) " +
-			"  or ds.name like UPPER(concat('%', ?1,'%')))")
+			"  or ds.name like UPPER(concat('%', ?1,'%')))" )
 	Page<Map<String, Object>> findPermissions(String search, Pageable pageable);
 
 }

@@ -14,23 +14,23 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Modifying
 	@Query("DELETE FROM datarelation r " +
 		"WHERE r.id IN (" +
-		"	SELECT rel.id" +
-		"	FROM datarelation rel " +
-		"	JOIN rel.relatedColumns c "+
-		"	WHERE c.id IN( " +
-		"		SELECT col.id " +
-		"		FROM datatable t " +
-		"		JOIN t.columns col " +
-		"		WHERE t.datasourceId = ?1))" +
+		"\tSELECT rel.id" +
+		"\tFROM datarelation rel " +
+		"\tJOIN rel.relatedColumns c "+
+		"\tWHERE c.id IN( " +
+		"\t\tSELECT col.id " +
+		"\t\tFROM datatable t " +
+		"\t\tJOIN t.columns col " +
+		"\t\tWHERE t.datasourceId = ?1))" +
 		"OR r.id IN (" +
-		"	SELECT rel.id" +
-		"	FROM datarelation rel " +
-		"	JOIN rel.relatedForeignColumns c "+
-		"	WHERE c.id IN( " +
-		"		SELECT col.id " +
-		"		FROM datatable t " +
-		"		JOIN t.columns col " +
-		"		WHERE t.datasourceId = ?1)) ")
+		"\tSELECT rel.id" +
+		"\tFROM datarelation rel " +
+		"\tJOIN rel.relatedForeignColumns c "+
+		"\tWHERE c.id IN( " +
+		"\t\tSELECT col.id " +
+		"\t\tFROM datatable t " +
+		"\t\tJOIN t.columns col " +
+		"\t\tWHERE t.datasourceId = ?1)) ")
 	void deleteByDatasourceId(Long datasourceId);
 
 	@Query("SELECT r " +
@@ -43,10 +43,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?1 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?1 )")
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?1 )")
 	List<DatarelationDBO> findVisibleRelations(List<Long> groupIds);
 
 	@Query("SELECT r " +
@@ -59,10 +59,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?2 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?2 ) " +
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?2 ) " +
 			"AND c.datatableId = ?1")
 	List<DatarelationDBO> findVisibleRelationsOfTable(Long datatableId, List<Long> groupIds);
 
@@ -75,10 +75,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE c.id IN ( " +
 			"  SELECT pc.datacolumnId " +
@@ -86,10 +86,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?4 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?4 ) " +
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?4 ) " +
 			"AND c.datatableId = ?1 " +
 			"AND source_e.id = ?2 " +
 			"AND destination_e.id = ?3 " +
@@ -100,10 +100,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE c.id IN ( " +
 			"  SELECT pc.datacolumnId " +
@@ -111,10 +111,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?5 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?5 ) " +
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?5 ) " +
 			"AND c.datatableId = ?1 " +
 			"AND fc.datatableId = ?2 " +
 			"AND source_e.id = ?3 " +
@@ -127,10 +127,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE c.id IN ( " +
 			"  SELECT pc.datacolumnId " +
@@ -138,10 +138,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?4 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?4 ) " +
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?4 ) " +
 			"AND fc.datatableId = ?1 " +
 			"AND source_e.id = ?2 " +
 			"AND destination_e.id = ?3 " +
@@ -153,10 +153,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE c.datatableId = ?1 " +
 			"AND source_e.id = ?2 " +
@@ -168,10 +168,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE c.datatableId = ?1 " +
 			"AND fc.datatableId = ?2 " +
@@ -185,10 +185,10 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE fc.datatableId = ?1 " +
 			"AND source_e.id = ?2 " +
@@ -201,29 +201,29 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE ((c.datatableId = ?2 " +
-			"		AND source_e.id = ?1 " +
-			"		AND destination_e.id = ?3) " +
-			" 	OR (" +
-			" 		fc.datatableId = ?2 " +
-			"		AND destination_e.id = ?1" +
-			"		AND source_e.id = ?3)" +
-			" ) " +
+			"\t\tAND source_e.id = ?1 " +
+			"\t\tAND destination_e.id = ?3) " +
+			"\tOR (" +
+			"\t\tfc.datatableId = ?2 " +
+			"\t\tAND destination_e.id = ?1" +
+			"\t\tAND source_e.id = ?3)" +
+			"\t) " +
 			"AND c.id IN ( " +
 			"  SELECT pc.datacolumnId " +
 			"  FROM permission_column pc " +
 			"  JOIN pc.groups g " +
 			"  WHERE g.id IN ?4 ) " +
 			"AND fc.id IN ( " +
-			"	SELECT pc.datacolumnId " +
-			"	FROM permission_column pc " +
-			"	JOIN pc.groups g " +
-			"	WHERE g.id IN ?4 ) " +
+			"\tSELECT pc.datacolumnId " +
+			"\tFROM permission_column pc " +
+			"\tJOIN pc.groups g " +
+			"\tWHERE g.id IN ?4 ) " +
 			"AND source_t.id = c.datatableId " +
 			"AND destination_t.id = fc.datatableId")
 	List<DatarelationDBO> findVisibleBidirectionalRelationsBetweenEntityAndTableAndOtherEntity(Long entityId, Long tableId, Long otherEntityId, List<Long> groupIds);
@@ -232,19 +232,19 @@ public interface DatarelationRepository extends DatabaseEntityRepository<Datarel
 	@Query("SELECT distinct r " +
 			"FROM datarelation r " +
 			"JOIN r.relatedColumns c " +
-			"JOIN r.relatedForeignColumns fc, " +
+			"JOIN r.relatedForeignColumns fc CROSS JOIN " +
 			"entity source_e " +
 			"JOIN source_e.tables source_t, " +
-			"entity destination_e " +
+			"CROSS JOIN entity destination_e " +
 			"JOIN destination_e.tables destination_t " +
 			"WHERE ((c.datatableId = ?2 " +
-			"		AND source_e.id = ?1 " +
-			"		AND destination_e.id = ?3) " +
-			" 	OR (" +
-			" 		fc.datatableId = ?2 " +
-			"		AND destination_e.id = ?1" +
-			"		AND source_e.id = ?3)" +
-			")" +
+			"\t\tAND source_e.id = ?1 " +
+			"\t\tAND destination_e.id = ?3) " +
+			"\tOR (" +
+			"\t\tfc.datatableId = ?2 " +
+			"\t\tAND destination_e.id = ?1" +
+			"\t\tAND source_e.id = ?3)" +
+			"\t)" +
 			"AND source_t.id = c.datatableId " +
 			"AND destination_t.id = fc.datatableId")
 	List<DatarelationDBO> findBidirectionalRelationsBetweenEntityAndTableAndOtherEntity(Long entityId, Long tableId, Long otherEntityId);

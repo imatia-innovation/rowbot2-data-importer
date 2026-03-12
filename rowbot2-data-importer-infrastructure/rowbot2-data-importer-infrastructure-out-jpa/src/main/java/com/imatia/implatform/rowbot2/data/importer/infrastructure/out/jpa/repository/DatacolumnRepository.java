@@ -31,36 +31,36 @@ public interface DatacolumnRepository extends DatabaseEntityRepository<Datacolum
 	Page<DatacolumnDBO> findVisibleDatacolumnsByAttribute(Long attributeId, List<Long> groupIds, Pageable pageable);
 
 	@Query("SELECT c.id as id, " +
-			"	c.name as column, " +
-			"	t.originalTableName as table, " +
-			"	t.id as tableId, " +
-			"	ds.name as datasource " +
+			"\tc.name as column, " +
+			"\tt.originalTableName as table, " +
+			"\tt.id as tableId, " +
+			"\tds.name as datasource " +
 			"FROM attribute a " +
-			"	JOIN a.datacolumns c, " +
-			" 	datasource ds " +
-			"	JOIN ds.tables t " +
-			"	JOIN t.columns col " +
+			"\tJOIN a.datacolumns c CROSS JOIN " +
+			"\tdatasource ds " +
+			"\tJOIN ds.tables t " +
+			"\tJOIN t.columns col " +
 			"WHERE a.id = ?1 " +
-			"	AND c.id = col.id")
+			"\tAND c.id = col.id")
 	Page<Map<String, Object>> findDatacolumnsInfoByAttribute(Long attributeId, Pageable pageable);
 
 	@Query("SELECT c.id as id, " +
-			"	c.name as column, " +
-			"	t.originalTableName as table, " +
-			"	t.id as tableId, " +
-			"	ds.name as datasource " +
+			"\tc.name as column, " +
+			"\tt.originalTableName as table, " +
+			"\tt.id as tableId, " +
+			"\tds.name as datasource " +
 			"FROM attribute a " +
-			"	JOIN a.datacolumns c, " +
-			" 	datasource ds " +
-			"	JOIN ds.tables t " +
-			"	JOIN t.columns col " +
+			"\tJOIN a.datacolumns c CROSS JOIN " +
+			"\tdatasource ds " +
+			"\tJOIN ds.tables t " +
+			"\tJOIN t.columns col " +
 			"WHERE a.id = ?1 " +
-			"	AND c.id IN (" +
-			"  		SELECT pc.datacolumnId " +
-			"  		FROM permission_column pc " +
-			"  		JOIN pc.groups g " +
-			"  		WHERE g.id IN ?2 ) " +
-			"	AND c.id = col.id")
+			"\tAND c.id IN (" +
+			"\t\tSELECT pc.datacolumnId " +
+			"\t\tFROM permission_column pc " +
+			"\t\tJOIN pc.groups g " +
+			"\t\tWHERE g.id IN ?2 ) " +
+			"\tAND c.id = col.id")
 	Page<Map<String, Object>> findVisibleDatacolumnsInfoByAttribute(Long attributeId, List<Long> groupIds, Pageable pageable);
 
 	@Query("SELECT c " +
@@ -166,8 +166,8 @@ public interface DatacolumnRepository extends DatabaseEntityRepository<Datacolum
 			"  ds.id as datasourceId, " +
 			"  ds.name as datasourceName " +
 			"FROM attribute a " +
-			"JOIN a.datacolumns c, " +
-			"datatable t, " +
+			"JOIN a.datacolumns c CROSS JOIN " +
+			"datatable t CROSS JOIN " +
 			"datasource ds " +
 			"WHERE c.datatableId = t.id " +
 			"AND t.datasourceId = ds.id " +

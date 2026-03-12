@@ -78,11 +78,11 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 		value = "select t.id as tableId, count(distinct ad.attributeid) as attrCount " +
 				"from datatable t " +
 				"inner join ( " +
-				"	select col.id as id, col.datatableid as datatableid " +
-				"	from datacolumn col " +
-				" 	inner join permission_column pc on pc.datacolumnid = col.id " +
-				" 	inner join rolegroup_permission rp on rp.permissionid = pc.id " +
-				" 	where rp.groupid in (?2) " +
+				"\tselect col.id as id, col.datatableid as datatableid " +
+				"\tfrom datacolumn col " +
+				"\t\tinner join permission_column pc on pc.datacolumnid = col.id " +
+				"\t\tinner join rolegroup_permission rp on rp.permissionid = pc.id " +
+				"\t\twhere rp.groupid in (?2) " +
 				") c on c.datatableid = t.id " +
 				"left outer join attribute_datacolumn ad on ad.datacolumnid = c.id and ad.attributeid in (?1) " +
 				"group by t.id " +
@@ -92,7 +92,7 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 	List<Map<String, Object>> findVisibleDatatablesIdsByAttributeIdList(List<Long> attributeIdList, List<Long> groupIds, int size, long offset);
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e, " +
+			"JOIN t.entities e CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND e.namespaceId = n.id " +
@@ -107,7 +107,7 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 	List<DatatableDBO> findVisibleByEntityId(Long entityId, String userId, List<Long> groupIds);
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e ," +
+			"JOIN t.entities e CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND e.namespaceId = n.id " +
@@ -115,10 +115,9 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 	List<DatatableDBO> findByEntityId(Long entityId, String userId);
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e " +
-			"JOIN t.columns tc, " +
+			"JOIN t.columns tc JOIN t.entities e CROSS JOIN " +
 			"attribute a " +
-			"JOIN a.datacolumns ac, " +
+			"JOIN a.datacolumns ac CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND a.id = ?2 " +
@@ -136,10 +135,9 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 	List<DatatableDBO> findVisibleByEntityIdAndAttributeId(Long entityId, Long attributeId, String userId, List<Long> groupIds);
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e " +
-			"JOIN t.columns tc, " +
+			"JOIN t.columns tc JOIN t.entities e CROSS JOIN " +
 			"attribute a " +
-			"JOIN a.datacolumns ac, " +
+			"JOIN a.datacolumns ac CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND a.id = ?2 " +
@@ -151,7 +149,7 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e, " +
+			"JOIN t.entities e CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND e.namespaceId = n.id " +
@@ -166,7 +164,7 @@ public interface DatatableRepository extends DatabaseEntityRepository<DatatableD
 	Page<DatatableDBO> findVisibleByEntityId(Long entityId, String userId, List<Long> groupIds, Pageable pageable);
 
 	@Query("SELECT t FROM datatable t " +
-			"JOIN t.entities e, " +
+			"JOIN t.entities e CROSS JOIN " +
 			"namespace n " +
 			"WHERE e.id = ?1 " +
 			"AND e.namespaceId = n.id " +
