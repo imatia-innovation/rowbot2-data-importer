@@ -1,0 +1,12 @@
+components:
+  responses:
+    BadRequest:
+      description: Bad request
+    NoContent:
+      description: No content
+    NotFound:
+      description: Not found
+    Unauthorized:
+      description: Unauthorized
+    Unexpected:
+      description: Unexpected error

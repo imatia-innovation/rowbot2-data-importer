@@ -20,13 +20,44 @@
     <dependencies>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-model</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <artifactId>rowbot2-data-importer-domain</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-infrastructure-out-rest</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
+        </dependency>
+        <!-- Third parties -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <!-- TODO: this should be into a infra module -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.6.1.jre11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.oracle.database.jdbc</groupId>
+            <artifactId>ojdbc11</artifactId>
+            <version>23.26.0.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.2.20</version>
         </dependency>
     </dependencies>
 

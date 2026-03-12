@@ -1,0 +1,13 @@
+openapi: 3.0.4
+info:
+  title: Rowbot2 Data Importer API
+  version: 1.0.0
+  description: >
+    API for rowbot2 ecosystem data import
+servers:
+  - url: '/'
+    description: Localhost
+
+paths:
+  /externaldatasource:
+    $ref: 'api/externaldatasource.yml#/default'

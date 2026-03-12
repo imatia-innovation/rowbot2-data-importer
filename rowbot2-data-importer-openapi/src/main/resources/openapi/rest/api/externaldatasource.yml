@@ -1,0 +1,59 @@
+default:
+  post:
+    operationId: import
+    tags:
+      - External Datasource Import
+    summary: Trigger async external datasource import process.
+    description: >
+      Trigger async external datasource import process.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            { $ref: '#/components/schemas/ImportRequestDTO' }
+    responses:
+      '400':
+        $ref: '../common/responses.yml#/components/responses/BadRequest'
+      '401':
+        $ref: '../common/responses.yml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../common/responses.yml#/components/responses/NotFound'
+      default:
+        $ref: '../common/responses.yml#/components/responses/Unexpected'
+
+components:
+  schemas:
+    ImportRequestDTO:
+      type: object
+      properties:
+        externalDatasourceId:
+          description: The external datasource id to be imported
+          type: integer
+          format: int64
+        tenantId:
+          description: Tenant identifier
+          type: integer
+          format: int64
+        tenantDataSourceConnectionSettings:
+          { $ref: '#/components/schemas/DataSourceConnectionSettingsDTO' }
+      required:
+        - externalDatasourceId
+        - tenantId
+        - tenantDataSourceConnectionSettings
+    DataSourceConnectionSettingsDTO:
+      type: object
+      properties:
+        url:
+          description: Datasource connection URI
+          type: string
+        username:
+          description: Datasource connection username
+          type: string
+        password:
+          description: Datasource password
+          type: string
+      required:
+        - url
+        - username
+        - password

@@ -1,3 +1,12 @@
+app:
+  async:
+    thread-name-prefix: async-
+    core-size: 4
+    max-size: 12
+    queue-capacity: 200
+    keep-alive: 30s
+    await-termination: true
+    await-termination-period: 10s
 build:
   version: '@project.version@'
 environment:
@@ -5,8 +14,6 @@ environment:
 logging:
   level:
     root: INFO
-
-
 server:
   port: 8080
   servlet:
@@ -18,3 +25,12 @@ spring:
     serialization:
       indent_output: true
     default-property-inclusion: non_null
+  datasource:
+    embedded-database-connection: none
+  jpa:
+    hibernate:
+      ddl-auto: none
+      defer-datasource-initialization: true
+    properties:
+      hibernate:
+        dialect: 'org.hibernate.dialect.PostgreSQLDialect'

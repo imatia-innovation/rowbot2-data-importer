@@ -30,7 +30,11 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rowbot2-data-importer-model</artifactId>
+            <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>rowbot2-data-importer-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
