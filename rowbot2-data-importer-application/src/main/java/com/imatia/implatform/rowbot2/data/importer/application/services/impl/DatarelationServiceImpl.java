@@ -22,7 +22,9 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional("multiTenantTransactionManager")
+//TODO: transactional
+////TODO: transactional
+//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
 public class DatarelationServiceImpl implements DatarelationService {
 
 	@Autowired

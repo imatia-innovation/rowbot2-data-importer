@@ -23,6 +23,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.sql.post
 
 import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceConnectionSettings;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceCredentialsContext;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jdbc.tenant.MultiTenantDataSourceProvider;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatacolumnToRefColumnDistanceDBO;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatacolumnToRefColumnDistanceRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.dataengine.DataEngineClient;
@@ -45,7 +46,9 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-@Transactional("multiTenantTransactionManager")
+//TODO: transactional
+////TODO: transactional
+//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
 public class DatasourceImporterImpl implements DatasourceImporter {
 
 	@Autowired
@@ -81,6 +84,9 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	@Autowired
 	DatacolumnToRefColumnDistanceRepository distanceRepository;
 
+	@Autowired
+	MultiTenantDataSourceProvider multiTenantDataSourceProvider;
+
 	private final Map<Long, CompletableFuture<Void>> currentlyImportingDatasources = new ConcurrentHashMap<>();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
@@ -99,6 +105,8 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 		if(!currentlyImportingDatasources.containsKey(datasourceId)){
 			LOGGER.info("Importing Datasource with Id: {}",datasourceId);
 			DataSourceCredentialsContext.set(cs);
+			//TODO: ¿Es necesario forzar de esta manera?
+			multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get());
 			Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
 			CompletableFuture<Void> importDatasourceFuture = CompletableFuture.supplyAsync(() ->  {
 				try {

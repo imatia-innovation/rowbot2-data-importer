@@ -6,7 +6,7 @@ import org.mapstruct.TargetType;
 
 import java.util.IdentityHashMap;
 import java.util.Map;
-
+//TODO: eliminar este Cycle Avoidinf conext de los mapper, Hibernate7 ya gestiona identidad de objetos
 public class CycleAvoidingMappingContext {
 	private Map<Object, Object> knownInstances = new IdentityHashMap<Object, Object>();
 

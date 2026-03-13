@@ -32,7 +32,9 @@ import java.util.Optional;
  * @param <R> the repository type
  */
 @Service
-@Transactional("multiTenantTransactionManager")
+//TODO: transactional
+////TODO: transactional
+//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
 @RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractCRUDServiceImpl<E extends BaseDomainObject, DBO extends BaseDatabaseEntity, R extends DatabaseEntityRepository<DBO>> implements CRUDService<E, Long> {

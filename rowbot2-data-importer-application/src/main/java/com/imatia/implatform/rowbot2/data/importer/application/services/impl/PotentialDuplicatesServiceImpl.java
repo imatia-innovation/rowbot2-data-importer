@@ -23,7 +23,9 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-@Transactional("multiTenantTransactionManager")
+//TODO: transactional
+////TODO: transactional
+//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
 public class PotentialDuplicatesServiceImpl extends AbstractCRUDServiceImpl<PotentialDuplicate, PotentialDuplicateDBO, PotentialDuplicateRepository> implements PotentialDuplicatesService {
 
 	@Autowired
