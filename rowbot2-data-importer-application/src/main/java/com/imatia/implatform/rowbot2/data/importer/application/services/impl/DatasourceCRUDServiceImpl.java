@@ -36,8 +36,10 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceCRUDServiceImpl.class);
 	@Autowired
 	PermissionService permissionService;
+
 	@Autowired
 	AttributeService attributeService;
+
 	@Autowired
 	ImportedDbClient importedDbClient;
 	@Autowired
@@ -136,7 +138,8 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return super.update(datasource);
 	}
 
-	private void removeRelations(Long datasourceId) {
+	@Override
+	public void removeRelations(Long datasourceId) {
 		logger.debug("Removing relations for DS {}",datasourceId);
 		datarelationService.deleteByDatasourceId(datasourceId);
 		logger.debug("Removing permissions for DS {}",datasourceId);
@@ -229,6 +232,7 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return (datasourceId!=null)?
 				datatableRepository.findByDatasourceId(datasourceId) : new ArrayList<>();
 	}
+
 	private DatasourceTypeDBO getDatasourceType(String datasourceType) {
 		DatasourceTypeDBO dsType = dsTypeRepository.findByName(datasourceType);
 		if(dsType == null){
@@ -239,6 +243,6 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 
 	@Override
 	public Datasource getDatasourceOfTable(Long datatableId){
-		return detailMapper.fromDBO(repo.findDatasourceOfTable(datatableId), new CycleAvoidingMappingContext());
+		return detailMapper.fromDBO(repo.findDatasourceOfTable(datatableId));
 	}
 }

@@ -12,10 +12,10 @@ import org.mapstruct.Mapping;
 public interface DetailDatasourceMapper extends DetailMapper<DatasourceDBO, Datasource> {
 	@Override
 	@Mapping(source="datasourceType", target="datasourceType.name")
-	DatasourceDBO toDBO(Datasource datasource, @Context CycleAvoidingMappingContext context);
+	DatasourceDBO toDBO(Datasource datasource);
 
 	@Override
 	@Mapping(source="datasourceType.name", target="datasourceType")
 	@Mapping(target="tables", ignore = true)
-	Datasource fromDBO(DatasourceDBO datasourceDBO, @Context CycleAvoidingMappingContext context);
+	Datasource fromDBO(DatasourceDBO datasourceDBO);
 }

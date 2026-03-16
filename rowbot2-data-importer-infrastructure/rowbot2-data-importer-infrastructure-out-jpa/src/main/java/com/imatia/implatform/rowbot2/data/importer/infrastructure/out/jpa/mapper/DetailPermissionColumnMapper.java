@@ -15,8 +15,8 @@ public interface DetailPermissionColumnMapper extends DetailMapper<PermissionCol
 	@Mapping(target ="column", source = "column.name")
 	@Mapping(target ="columnId", source = "column.id")
 	@Mapping(target="groups", ignore = true)
-	PermissionColumn fromDBO(PermissionColumnDBO dbo, @Context CycleAvoidingMappingContext context);
+	PermissionColumn fromDBO(PermissionColumnDBO dbo);
 
 	@InheritInverseConfiguration(name = "fromDBO")
-	PermissionColumnDBO toDBO(PermissionColumn domainObject, @Context CycleAvoidingMappingContext context);
+	PermissionColumnDBO toDBO(PermissionColumn domainObject);
 }

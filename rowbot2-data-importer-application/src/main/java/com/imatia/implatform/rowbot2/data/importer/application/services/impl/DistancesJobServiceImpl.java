@@ -48,7 +48,7 @@ public class DistancesJobServiceImpl extends AbstractCRUDServiceImpl<DistancesJo
 						.jobStatus(job.getJobStatus())
 						.errorMsg(job.getErrorMsg())
 					.build());
-		return detailMapper.fromDBO(savedJob, new CycleAvoidingMappingContext());
+		return detailMapper.fromDBO(savedJob);
 	}
 
 	@Override

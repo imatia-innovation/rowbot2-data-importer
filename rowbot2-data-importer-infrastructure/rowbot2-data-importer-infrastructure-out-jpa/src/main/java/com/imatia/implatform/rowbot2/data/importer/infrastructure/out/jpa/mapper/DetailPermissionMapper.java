@@ -16,11 +16,11 @@ public interface DetailPermissionMapper extends DetailMapper<PermissionDBO, Perm
 	@Override
 	@SubclassMapping(source = PermissionColumnDBO.class, target = PermissionColumn.class)
 	@Mapping(target="groups", ignore = true)
-	Permission fromDBO(PermissionDBO dbo,  @Context CycleAvoidingMappingContext context);
+	Permission fromDBO(PermissionDBO dbo);
 
 	@Override
 	@SubclassMapping(source = PermissionColumn.class, target = PermissionColumnDBO.class)
 	@Mapping(target="groups", ignore = true)
-	PermissionDBO toDBO(Permission dbo,  @Context CycleAvoidingMappingContext context);
+	PermissionDBO toDBO(Permission dbo);
 
 }

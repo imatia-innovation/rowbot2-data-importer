@@ -5,8 +5,8 @@ import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity
 import org.mapstruct.Context;
 
 public interface DetailMapper<DBO extends BaseDatabaseEntity, DO extends BaseDomainObject> {
-	DBO toDBO(DO domainObject,  @Context CycleAvoidingMappingContext context);
+	DBO toDBO(DO domainObject);
 
-	DO fromDBO(DBO dbo,  @Context CycleAvoidingMappingContext context);
+	DO fromDBO(DBO dbo);
 
 }

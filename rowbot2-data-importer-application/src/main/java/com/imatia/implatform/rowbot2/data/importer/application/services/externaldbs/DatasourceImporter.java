@@ -5,11 +5,6 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourc
 
 public interface DatasourceImporter{
 
-	void importDatasource(Long datasourceId, DataSourceConnectionSettings cs);
+	void importDatasource(Long datasourceId, DataSourceConnectionSettings cs, boolean resume);
 
-	void resumeDatasourceImport(Long datasourceId, DataSourceConnectionSettings cs);
-
-	void recalculateDistances(Datasource datasource, DataSourceConnectionSettings cs);
-
-	String checkConnection(Datasource datasource, DataSourceConnectionSettings cs);
 }

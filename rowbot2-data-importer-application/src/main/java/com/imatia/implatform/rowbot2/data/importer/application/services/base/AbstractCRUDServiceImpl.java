@@ -32,9 +32,7 @@ import java.util.Optional;
  * @param <R> the repository type
  */
 @Service
-//TODO: transactional
-////TODO: transactional
-//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
+@Transactional
 @RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public abstract class AbstractCRUDServiceImpl<E extends BaseDomainObject, DBO extends BaseDatabaseEntity, R extends DatabaseEntityRepository<DBO>> implements CRUDService<E, Long> {
@@ -110,7 +108,7 @@ public abstract class AbstractCRUDServiceImpl<E extends BaseDomainObject, DBO ex
 	 * or we want another different mapping approach
 	 */
 	protected DBO toDBO(E entity){
-		return detailMapper.toDBO(entity, new CycleAvoidingMappingContext());
+		return detailMapper.toDBO(entity);
 	}
 
 	/**
@@ -118,7 +116,7 @@ public abstract class AbstractCRUDServiceImpl<E extends BaseDomainObject, DBO ex
 	 * or we want another different mapping approach
 	 */
 	protected E fromDBO(DBO dbo){
-		return detailMapper.fromDBO(dbo, new CycleAvoidingMappingContext());
+		return detailMapper.fromDBO(dbo);
 	}
 
 	/**

@@ -117,4 +117,5 @@ public interface PermissionRepository extends DatabaseEntityRepository<Permissio
 			"  or ds.name like UPPER(concat('%', ?1,'%')))" )
 	Page<Map<String, Object>> findPermissions(String search, Pageable pageable);
 
+
 }

@@ -17,11 +17,11 @@ public interface DetailValidationRuleMapper extends DetailMapper<ValidationRuleD
 
 	@Override
 	@Mapping(target = "datacolumnIds", source = "datacolumns")
-	ValidationRule fromDBO(ValidationRuleDBO dbo, @Context CycleAvoidingMappingContext context);
+	ValidationRule fromDBO(ValidationRuleDBO dbo);
 
 	@Override
 	@Mapping(target = "datacolumns", source = "datacolumnIds")
-	ValidationRuleDBO toDBO(ValidationRule domainObject, @Context CycleAvoidingMappingContext context);
+	ValidationRuleDBO toDBO(ValidationRule domainObject);
 
 	default List<Long> datacolumnIdsFromDBO(List<ValidationRuleDatacolumnDBO> validationRuleDatacolumnDBOList){
 		return validationRuleDatacolumnDBOList.stream()

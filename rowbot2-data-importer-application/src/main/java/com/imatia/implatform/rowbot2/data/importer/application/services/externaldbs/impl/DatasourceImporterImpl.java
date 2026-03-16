@@ -4,8 +4,6 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.*;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datacolumn;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datatable;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.DistancesJob;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdDuplicatedException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalColumnDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalPrimaryKeyDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalRelation;
@@ -23,10 +21,6 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.sql.post
 
 import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceConnectionSettings;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceCredentialsContext;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jdbc.tenant.MultiTenantDataSourceProvider;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatacolumnToRefColumnDistanceDBO;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatacolumnToRefColumnDistanceRepository;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.dataengine.DataEngineClient;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,9 +40,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-//TODO: transactional
-////TODO: transactional
-//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
+@Transactional
 public class DatasourceImporterImpl implements DatasourceImporter {
 
 	@Autowired
@@ -67,48 +59,29 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	DatasourceCRUDService datasourceCRUDService;
 
 	@Autowired
-	DataEngineClient dataEngineClient;
-
-	@Autowired
 	DatarelationService datarelationService;
 
 	@Autowired
 	DatacolumnService datacolumnService;
-
-	@Autowired
-	DistancesJobService distancesJobService;
-
-	@Autowired
-	DatacolumnDistanceByRefTableService datacolumnDistanceByRefTableService;
-
-	@Autowired
-	DatacolumnToRefColumnDistanceRepository distanceRepository;
-
-	@Autowired
-	MultiTenantDataSourceProvider multiTenantDataSourceProvider;
 
 	private final Map<Long, CompletableFuture<Void>> currentlyImportingDatasources = new ConcurrentHashMap<>();
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
 	@Override
-	public void importDatasource(final Long datasourceId, DataSourceConnectionSettings cs){
-		importDatasource(datasourceId,  cs,false);
-	}
-
-	@Override
-	public void resumeDatasourceImport(final Long datasourceId, DataSourceConnectionSettings cs){
-		importDatasource(datasourceId, cs,true);
-	}
-
-	private void importDatasource(final Long datasourceId, DataSourceConnectionSettings cs,final boolean resumingImport){
+	public void importDatasource(final Long datasourceId, DataSourceConnectionSettings cs, boolean resumingImport) {
 		if(!currentlyImportingDatasources.containsKey(datasourceId)){
-			LOGGER.info("Importing Datasource with Id: {}",datasourceId);
-			DataSourceCredentialsContext.set(cs);
-			//TODO: ¿Es necesario forzar de esta manera?
-			multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get());
+
+			if (!resumingImport) {
+				LOGGER.info("Removing previous relations for Datasource with Id: {}", datasourceId);
+				datasourceCRUDService.removeRelations(datasourceId);
+			}
+
+			LOGGER.info("{} Datasource with Id: {}", resumingImport? "Resuming" : "Importing", datasourceId);
 			Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
+
 			CompletableFuture<Void> importDatasourceFuture = CompletableFuture.supplyAsync(() ->  {
+				DataSourceCredentialsContext.set(cs);
 				try {
 					ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
 					LOGGER.info("Deleting permissions for DS {}", datasourceId);
@@ -125,11 +98,12 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 					permissionService.createPermissionsForDatasource(savedDatasource);
 					LOGGER.info("Creating relations for DS {} ",datasourceId);
 					importRelations(datasource,externalDBImporter);
-					calculateDistances(savedDatasource);
 				}catch(Throwable t){
 					LOGGER.error(t.getMessage(), t);
+					//TODO: función callback para que rowbot2 actualice el estado
 					datasourceCRUDService.updateStatus(datasourceId, DatasourceStatus.ERROR.getDescription(), t.getMessage());
 				}finally {
+					 //TODO: función callback para que rowbot2 actualice el estado
 					currentlyImportingDatasources.remove(datasourceId);
 					DataSourceCredentialsContext.clear();
 					LOGGER.info("DS with Id: {} import finished.",datasourceId);
@@ -140,70 +114,12 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 		}
 	}
 
-	public String checkConnection(Datasource datasource, DataSourceConnectionSettings cs){
-		DataSourceCredentialsContext.set(cs);
-		return externalDBImporterFactory.create(datasource).checkConnection();
-	}
-
 	private Datasource buildDatasourceToImport(Long datasourceId, boolean resumingImport) {
 		Datasource datasource = datasourceCRUDService.updateStatus(datasourceId, DatasourceStatus.READING.getDescription());
 		if(!resumingImport){
 			datasource = datasourceCRUDService.updateLastImportedPage(datasourceId, null,null, null);
 		}
 		return datasource;
-	}
-
-	private List<String> calculateAllTableNames(Long datasourceId) {
-		return datatableService.findByDatasourceId(datasourceId).stream()
-				.map(Datatable::getName)
-				.collect(Collectors.toList());
-	}
-
-	@Override
-	public void recalculateDistances(Datasource datasource, DataSourceConnectionSettings cs){
-		DataSourceCredentialsContext.set(cs);
-		Datasource fullDatasource = datasource.toBuilder().tables(datatableService.findByDatasourceId(datasource.getId())).build();
-		if(!currentlyImportingDatasources.containsKey(fullDatasource.getId())) {
-			LOGGER.info("Recalculating distances for Datasource with Id: {}", fullDatasource.getId());
-			CompletableFuture<Void> recalculateDistancesDatasourceFuture = CompletableFuture.supplyAsync(() -> {
-				try {
-					DataSourceCredentialsContext.set(cs);
-					calculateDistances(fullDatasource);
-				} catch (Throwable t) {
-					LOGGER.error(t.getMessage(), t);
-					datasourceCRUDService.updateStatus(fullDatasource.getId(), DatasourceStatus.ERROR.getDescription(), t.getMessage());
-				} finally {
-					DataSourceCredentialsContext.clear();
-					currentlyImportingDatasources.remove(fullDatasource.getId());
-					LOGGER.info("DS with Id: {} import finished.", fullDatasource.getId());
-				}
-				return null;
-			});
-			currentlyImportingDatasources.put(fullDatasource.getId(), recalculateDistancesDatasourceFuture);
-		}
-	}
-
-	private void calculateDistances(Datasource datasource){
-		datasourceCRUDService.updateStatus(datasource.getId(), DatasourceStatus.CALCULATING_DISTANCE.getDescription());
-		LOGGER.info("Calculating distances for DS {}", datasource.getId());
-		calculateCCCDistances(datasource);
-		datasourceCRUDService.updateStatus(datasource.getId(), DatasourceStatus.READY.getDescription());
-		//calculateDataengineDistances(datasource);
-	}
-	private void calculateCCCDistances(Datasource datasource){
-		List<DatacolumnToRefColumnDistanceDBO> distances = datacolumnDistanceByRefTableService.calculateDistancesToReferenceColumns(datasource)
-				.collect(Collectors.toList());
-		LOGGER.info("Persisiting DS {} CCC distances", datasource.getId());
-		distanceRepository.saveAll(distances);
-		LOGGER.info("CCC Distances for DS {} persisted", datasource.getId());
-	}
-
-	private void calculateDataengineDistances(Datasource datasource) {
-		DistancesJob distancesJob = dataEngineClient.calculateDistances(calculateAllTableNames(datasource.getId()), datasource);
-		if(distancesJobService.existsByJobId(distancesJob.getJobId())){
-			throw new IdDuplicatedException("Duplicated job id:"+distancesJob.getJobId());
-		}
-		distancesJobService.create(distancesJob);
 	}
 
 	private void importRelations(Datasource datasource, ExternalDBImporter externalDBImporter){

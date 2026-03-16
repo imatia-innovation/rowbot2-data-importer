@@ -22,9 +22,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-//TODO: transactional
-////TODO: transactional
-//@Transactional("multiTenantTransactionManager") ("multiTenantTransactionManager")
+@Transactional
 public class DatarelationServiceImpl implements DatarelationService {
 
 	@Autowired
@@ -72,7 +70,7 @@ public class DatarelationServiceImpl implements DatarelationService {
 			datarelationDBOs = repo.findVisibleRelations(permissionService.calculateCurrentUserGroupIds());
 		}
 		return datarelationDBOs.stream()
-				.map(dbo->detailMapper.fromDBO(dbo, new CycleAvoidingMappingContext()))
+				.map(dbo->detailMapper.fromDBO(dbo))
 				.collect(Collectors.toList());
 	}
 
@@ -85,7 +83,7 @@ public class DatarelationServiceImpl implements DatarelationService {
 			datarelationDBOs = repo.findVisibleRelationsOfEntitiesAndSourceTable(datatableId, primaryEntityId, destinationEntityId, permissionService.calculateCurrentUserGroupIds());
 		}
 		return datarelationDBOs.stream()
-				.map(dbo->detailMapper.fromDBO(dbo, new CycleAvoidingMappingContext()))
+				.map(dbo->detailMapper.fromDBO(dbo))
 				.collect(Collectors.toList());
 	}
 
@@ -98,7 +96,7 @@ public class DatarelationServiceImpl implements DatarelationService {
 			datarelationDBOs = repo.findVisibleRelationsOfEntitiesAndDestinationTable(datatableId, primaryEntityId, destinationEntityId, permissionService.calculateCurrentUserGroupIds());
 		}
 		return datarelationDBOs.stream()
-				.map(dbo->detailMapper.fromDBO(dbo, new CycleAvoidingMappingContext()))
+				.map(dbo->detailMapper.fromDBO(dbo))
 				.collect(Collectors.toList());
 
 	}
@@ -112,7 +110,7 @@ public class DatarelationServiceImpl implements DatarelationService {
 			datarelationDBOs = repo.findVisibleRelationsOfEntitiesAndTables(sourceDatatableId, destinationDatatableId, sourceEntityId, destinationEntityId, permissionService.calculateCurrentUserGroupIds());
 		}
 		return datarelationDBOs.stream()
-				.map(dbo->detailMapper.fromDBO(dbo, new CycleAvoidingMappingContext()))
+				.map(dbo->detailMapper.fromDBO(dbo))
 				.collect(Collectors.toList());
 	}
 

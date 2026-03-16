@@ -22,11 +22,11 @@ public interface DetailEntityMapper extends DetailMapper<EntityDBO, Entity> {
 	@Override
 	@Mapping(source="linkedEntities", target="linkedEntities",qualifiedByName="SimpleEntityFromDBO")
 	@Mapping(source="entityAttributes", target="attributes")
-	Entity fromDBO(EntityDBO entityDBO, @Context CycleAvoidingMappingContext context);
+	Entity fromDBO(EntityDBO entityDBO);
 
 	@Override
 	@Mapping(source="attributes", target="entityAttributes")
-	EntityDBO toDBO(Entity entity, @Context CycleAvoidingMappingContext context);
+	EntityDBO toDBO(Entity entity);
 
 	default List<EntityAttributeDBO> toDBO(List<Attribute> attributeList){
 		if(ObjectUtils.isEmpty(attributeList)){
@@ -34,7 +34,7 @@ public interface DetailEntityMapper extends DetailMapper<EntityDBO, Entity> {
 		}
 		return IntStream.range(0,attributeList.size())
 				.mapToObj(index -> EntityAttributeDBO.builder()
-						.attributeDBO(Mappers.getMapper(DetailAttributeMapper.class).toDBO(attributeList.get(index), new CycleAvoidingMappingContext()))
+						.attributeDBO(Mappers.getMapper(DetailAttributeMapper.class).toDBO(attributeList.get(index)))
 						.index(index)
 						.build())
 				.collect(Collectors.toList());

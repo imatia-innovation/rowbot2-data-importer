@@ -54,7 +54,7 @@ public class DatacolumnServiceImpl extends AbstractCRUDServiceImpl<Datacolumn, D
 	@Override
 	public List<Datacolumn> findByAttribute(Long attributeId){
 		return repo.findDatacolumnsByAttribute(attributeId).stream()
-				.map(datacolumn -> detailMapper.fromDBO(datacolumn, new CycleAvoidingMappingContext()))
+				.map(datacolumn -> detailMapper.fromDBO(datacolumn))
 				.collect(Collectors.toList());
 	}
 

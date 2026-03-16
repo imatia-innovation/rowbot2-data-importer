@@ -1,8 +1,11 @@
 package com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jdbc.tenant;
 
+import jakarta.persistence.EntityManagerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.orm.jpa.JpaTransactionManager;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
 import java.io.PrintWriter;
@@ -19,6 +22,12 @@ public class MultiTenantDataSourceConfig {
         // DataSource por defecto que falla con mensaje explicativo
         routing.initializeEmptyTargets(new FailingDataSource());
         return routing;
+    }
+
+    @Bean
+    @Primary
+    public PlatformTransactionManager transactionManager(EntityManagerFactory multiTenantEntityManager){
+        return new JpaTransactionManager(multiTenantEntityManager);
     }
 
     /** DS “dummy” para fallar si no registraste aún el tenant. */

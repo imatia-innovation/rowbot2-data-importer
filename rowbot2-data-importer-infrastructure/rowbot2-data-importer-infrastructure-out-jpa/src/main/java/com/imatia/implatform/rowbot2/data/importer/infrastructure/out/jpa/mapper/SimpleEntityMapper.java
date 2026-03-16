@@ -33,7 +33,7 @@ public interface SimpleEntityMapper extends SimpleMapper<EntityDBO, Entity> {
 				.sorted(Comparator.comparing(EntityAttributeDBO::getIndex,
 						Comparator.nullsLast(Integer::compareTo)))
 				.map(entityAttributeDBO ->
-						Mappers.getMapper(DetailAttributeMapper.class).fromDBO(entityAttributeDBO.getAttributeDBO(), new CycleAvoidingMappingContext()))
+						Mappers.getMapper(DetailAttributeMapper.class).fromDBO(entityAttributeDBO.getAttributeDBO()))
 				.collect(Collectors.toList());
 	}
 

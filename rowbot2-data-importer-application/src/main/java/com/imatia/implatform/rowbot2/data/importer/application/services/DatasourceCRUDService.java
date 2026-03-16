@@ -18,6 +18,8 @@ public interface DatasourceCRUDService extends CRUDService<Datasource, Long> {
 
 	Datasource getDatasourceOfTable(Long datatableId);
 
+	void removeRelations(Long datasourceId);
+
 	Page<Datasource> findReady(String search, Pageable pageable);
 
 	List<Datasource> findReady();

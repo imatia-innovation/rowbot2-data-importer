@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface DetailPotentialDuplicateMapper extends DetailMapper<PotentialDuplicateDBO, PotentialDuplicate> {
 
-	default PotentialDuplicate fromDBO(PotentialDuplicateDBO potentialDuplicateDBO, @Context CycleAvoidingMappingContext context){
+	default PotentialDuplicate fromDBO(PotentialDuplicateDBO potentialDuplicateDBO){
 		return PotentialDuplicate.builder()
 				.id(potentialDuplicateDBO.getId())
 				.entityId(potentialDuplicateDBO.getEntityId())
@@ -25,7 +25,7 @@ public interface DetailPotentialDuplicateMapper extends DetailMapper<PotentialDu
 				.build();
 	}
 
-	default PotentialDuplicateDBO toDBO(PotentialDuplicate potentialDuplicate, @Context CycleAvoidingMappingContext context){
+	default PotentialDuplicateDBO toDBO(PotentialDuplicate potentialDuplicate){
 		return PotentialDuplicateDBO.builder()
 				.id(potentialDuplicate.getId())
 				.entityId(potentialDuplicate.getEntityId())

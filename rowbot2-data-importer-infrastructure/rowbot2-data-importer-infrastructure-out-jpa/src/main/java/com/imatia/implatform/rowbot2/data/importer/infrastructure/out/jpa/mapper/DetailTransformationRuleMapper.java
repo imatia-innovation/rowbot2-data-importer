@@ -18,12 +18,12 @@ public interface DetailTransformationRuleMapper extends DetailMapper<Transformat
 	@Override
 	@Mapping(target = "map", source = "mappingEntries")
 	@Mapping(target = "datacolumnIds", source = "datacolumns")
-	TransformationRule fromDBO(TransformationRuleDBO dbo, @Context CycleAvoidingMappingContext context);
+	TransformationRule fromDBO(TransformationRuleDBO dbo);
 
 	@Override
 	@Mapping(target ="mappingEntries", source = "map")
 	@Mapping(target = "datacolumns", source = "datacolumnIds")
-	TransformationRuleDBO toDBO(TransformationRule domainObject, @Context CycleAvoidingMappingContext context);
+	TransformationRuleDBO toDBO(TransformationRule domainObject);
 
 	default List<Long> datacolumnIdsFromDBO(List<TransformationRuleDatacolumnDBO> transformationRuleDatacolumnDBOList){
 		return transformationRuleDatacolumnDBOList.stream()
