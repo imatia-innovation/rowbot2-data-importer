@@ -11,40 +11,6 @@ import java.util.List;
 
 @Repository
 public interface DatacolumnToRefColumnDistanceRepository extends DatabaseEntityRepository<DatacolumnToRefColumnDistanceDBO> {
-	Page<DatacolumnToRefColumnDistanceDBO> findByReferenceColumnName(String referenceTableColumnName, Pageable pageable);
-
-	@Query("SELECT d " +
-			"FROM datacolumn_to_reference_column_distance d " +
-			"WHERE d.referenceColumnName = ?1 " +
-			"AND d.datacolumnId IN (" +
-			"  SELECT pc.datacolumnId " +
-			"  FROM permission_column pc " +
-			"  JOIN pc.groups g " +
-			"  WHERE g.id IN ?2 )")
-	Page<DatacolumnToRefColumnDistanceDBO> findVisibleByReferenceColumnName(String referenceTableColumnName, List<Long> groupIds, Pageable pageable);
-
-	@Query("SELECT d " +
-			"FROM datacolumn_to_reference_column_distance d " +
-			"JOIN datacolumn dc ON dc.id = d.datacolumnId " +
-			"JOIN datatable dt on dc.datatableId = dt.id " +
-			"JOIN datasource ds on ds.id = dt.datasourceId " +
-			"WHERE d.referenceColumnName = ?1 " +
-			"AND ( UPPER(dc.name) LIKE UPPER(concat('%', ?2,'%')) " +
-			"OR UPPER(dt.originalTableName) LIKE UPPER(concat('%', ?2, '%')) " +
-			"OR UPPER(ds.name) LIKE UPPER(concat('%', ?2, '%')) )")
-	Page<DatacolumnToRefColumnDistanceDBO> findByReferenceColumnNameAndDatacolumnName(String referenceTableColumnName, String DatacolumnName, Pageable pageable);
-
-	@Query("SELECT d " +
-			"FROM datacolumn_to_reference_column_distance d " +
-			"JOIN datacolumn dc " +
-			"WHERE d.referenceColumnName = ?1 " +
-			"AND d.datacolumnId IN (" +
-			"  SELECT pc.datacolumnId " +
-			"  FROM permission_column pc " +
-			"  JOIN pc.groups g " +
-			"  WHERE g.id IN ?2 ) " +
-			"AND UPPER(dc.name) LIKE UPPER(concat('%', ?3,'%')) ")
-	Page<DatacolumnToRefColumnDistanceDBO> findVisibleByReferenceColumnName(String referenceTableColumnName, List<Long> groupIds, String search, Pageable pageable);
 
 	@Modifying
 	@Query("DELETE FROM datacolumn_to_reference_column_distance d " +

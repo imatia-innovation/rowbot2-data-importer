@@ -67,8 +67,12 @@ public class OracleImporter extends AbstractJDBCImporter{
     }
 
     @Override
-    protected String getRowCountQuery(String qualifiedTableName) {
-        return "SELECT COUNT(*) AS " + ROW_COUNT_ALIAS + " FROM " + qualifiedTableName;
+    protected String getRowCountQuery(String originalTableName) {
+        String schema = this.getSchema();
+        return "SELECT NUM_ROWS AS " + ROW_COUNT_ALIAS + " " +
+                "FROM ALL_TABLES " +
+                "WHERE UPPER(OWNER) = '" + schema.toUpperCase() + "' " +
+                "AND UPPER(TABLE_NAME) = '" + originalTableName.toUpperCase() + "';";
     }
 
     @Override

@@ -11,5 +11,4 @@ public interface DistancesJobRepository extends DatabaseEntityRepository<Distanc
 
 	void deleteByDatasourceId(Long datasourceId);
 
-	Boolean existsByJobId(String jobId);
 }

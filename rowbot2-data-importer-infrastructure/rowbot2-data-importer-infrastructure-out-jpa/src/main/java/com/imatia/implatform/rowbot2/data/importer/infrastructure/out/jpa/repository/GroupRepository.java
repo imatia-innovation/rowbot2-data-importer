@@ -24,11 +24,5 @@ public interface GroupRepository extends DatabaseEntityRepository<GroupDBO> {
 			"WHERE ug.userId = ?1)")
 	List<GroupDBO> findByUserId(String userId);
 
-	@Query("SELECT g FROM rolegroup g " +
-			"WHERE g.id IN (" +
-			"SELECT ug.group.id FROM rolegroup_users ug " +
-			"WHERE ug.userId = ?1)")
-	Page<GroupDBO> findByUserId(String userId, Pageable pageable);
-
 	Optional<GroupDBO> findByNameIgnoreCase(String name);
 }

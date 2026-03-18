@@ -96,7 +96,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         }
     }
 
-    protected abstract String getRowCountQuery(String qualifiedTableName);
+    protected abstract String getRowCountQuery(String originalTableName);
 
     @Override
     public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Integer pageSize, int startingPageIndex){
@@ -128,7 +128,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
 
     private int getTableRowCount(Datatable datatable){
-        String rowCountQuery = getRowCountQuery(getQualifiedTableName(datatable.getOriginalTableName()));
+        String rowCountQuery = getRowCountQuery(datatable.getOriginalTableName());
         LOGGER.debug("Running row count query: {}",rowCountQuery);
         try(Connection connection = sqlDataSource.getConnection();
             Statement statement = connection.createStatement();

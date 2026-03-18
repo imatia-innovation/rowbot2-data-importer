@@ -6,15 +6,9 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase
 import java.util.List;
 
 public interface DatarelationService {
+
 	void createRelations(Long datasourceId, List<ExternalRelation> relations);
 
-	List<Datarelation> getVisibleRelations();
-
-	List<Datarelation> getVisibleRelationsBetweenEntitiesWithPrimaryTable(Long datatableId, Long primaryEntityId, Long destinationEntityId);
-
-	List<Datarelation> getVisibleRelationsBetweenEntitiesWithDestinationTable(Long datatableId, Long primaryEntityId, Long destinationEntityId);
-
-	List<Datarelation> getVisibleRelationsBetweenEntitiesAndTables(Long sourceDatatableId, Long destinationDatatableId, Long sourceEntityId, Long destinationEntityId);
-
 	void deleteByDatasourceId(Long datasourceId);
+
 }

@@ -4,13 +4,11 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.application.services.*;
 import com.imatia.implatform.rowbot2.data.importer.application.services.base.AbstractCRUDServiceImpl;
 import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.enums.DatasourceStatus;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatasourceDBO;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatasourceTypeDBO;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatatableDBO;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdNotExistentOnDBException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RelatedEntityNotFoundInDBException;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.mapper.base.CycleAvoidingMappingContext;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatacolumnToRefColumnDistanceRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatasourceRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatasourceTypeRepository;
@@ -36,9 +34,6 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceCRUDServiceImpl.class);
 	@Autowired
 	PermissionService permissionService;
-
-	@Autowired
-	AttributeService attributeService;
 
 	@Autowired
 	ImportedDbClient importedDbClient;
@@ -70,6 +65,7 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 	DatacolumnToRefColumnDistanceRepository distanceRepository;
 
 	private final Logger logger = LoggerFactory.getLogger(DatasourceCRUDServiceImpl.class);
+
 	@Override
 	public Optional<Datasource> read(final Long entityId) {
 		if(!repo.existsById(entityId) || !permissionService.isDatasourceVisible(entityId)){
@@ -84,19 +80,6 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return fromDBOPage(Objects.isNull(search) ?
 				repo.findAll(pageable) :
 				repo.findBySubstring(search, pageable));
-	}
-
-	public Page<Datasource> findReady(String search, Pageable pageable){
-		return fromDBOPage(Objects.isNull(search) ?
-				repo.findByStatusAndIdIn(DatasourceStatus.READY.getDescription(),permissionService.getCurrentUserVisibleDatasources(), pageable) :
-				repo.findBySubstringAndStatusAndIdIn(search, DatasourceStatus.READY.getDescription(),permissionService.getCurrentUserVisibleDatasources(),pageable));
-	}
-
-	@Override
-	public List<Datasource> findReady() {
-		return repo.findByStatus(DatasourceStatus.READY.getDescription()).stream()
-				.map(this::fromDBO)
-				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -241,8 +224,4 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return dsType;
 	}
 
-	@Override
-	public Datasource getDatasourceOfTable(Long datatableId){
-		return detailMapper.fromDBO(repo.findDatasourceOfTable(datatableId));
-	}
 }

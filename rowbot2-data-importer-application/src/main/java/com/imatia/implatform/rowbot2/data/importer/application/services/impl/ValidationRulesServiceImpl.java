@@ -7,8 +7,6 @@ import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.ValidationConditionRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.ValidationRulesRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -20,8 +18,6 @@ public class ValidationRulesServiceImpl extends AbstractCRUDServiceImpl<Validati
 
 	@Autowired
 	ValidationConditionRepository validationConditionRepository;
-
-	private final static Logger LOGGER = LoggerFactory.getLogger(ValidationRulesServiceImpl.class);
 
 	@Override
 	public void deleteByDatasourceId(Long datasourceId){

@@ -7,5 +7,4 @@ public interface DistancesJobService extends CRUDService<DistancesJob, Long> {
 
 	void deleteByDatasourceId(Long datasourceId);
 
-	boolean existsByJobId(String jobId);
 }

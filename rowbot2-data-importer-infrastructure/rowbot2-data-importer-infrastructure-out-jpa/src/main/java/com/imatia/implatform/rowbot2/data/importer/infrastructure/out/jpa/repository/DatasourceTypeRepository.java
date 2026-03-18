@@ -6,5 +6,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface DatasourceTypeRepository extends DatabaseEntityRepository<DatasourceTypeDBO> {
+
 	DatasourceTypeDBO findByName(String name);
 }

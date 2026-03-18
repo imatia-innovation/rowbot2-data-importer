@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface DatasourceCRUDService extends CRUDService<Datasource, Long> {
+
 	Datasource updateIncludingTables(Datasource datasource);
 
 	Datasource updateStatus(Long datasourceId, String newStatus);
@@ -16,11 +17,6 @@ public interface DatasourceCRUDService extends CRUDService<Datasource, Long> {
 
 	Datasource updateLastImportedPage(Long datasourceId, String statusDescription, String lastImportedTableName, Integer lastImportedPageIndex);
 
-	Datasource getDatasourceOfTable(Long datatableId);
-
 	void removeRelations(Long datasourceId);
 
-	Page<Datasource> findReady(String search, Pageable pageable);
-
-	List<Datasource> findReady();
 }

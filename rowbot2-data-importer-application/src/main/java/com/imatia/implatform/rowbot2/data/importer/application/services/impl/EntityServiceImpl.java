@@ -17,8 +17,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class EntityServiceImpl extends AbstractCRUDServiceImpl<Entity, EntityDBO, EntityRepository> implements EntityService {
 
-	private final static Logger LOGGER = LoggerFactory.getLogger(EntityServiceImpl.class);
-
 	@Override
 	public List<Entity> findByDatasourceId(Long datasourceId) {
 		return repo.findByDatasourceId(datasourceId).stream()

@@ -10,6 +10,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface PermissionService extends CRUDService<Permission, Long> {
+
 	void createPermissionsForDatasource(Datasource datasource);
 
 	void deletePermissionsOfDatasource(Long datasourceId);
@@ -23,4 +24,5 @@ public interface PermissionService extends CRUDService<Permission, Long> {
 	boolean isDatatableVisible(Long datatableId);
 
 	List<Long> calculateCurrentUserGroupIds();
+
 }

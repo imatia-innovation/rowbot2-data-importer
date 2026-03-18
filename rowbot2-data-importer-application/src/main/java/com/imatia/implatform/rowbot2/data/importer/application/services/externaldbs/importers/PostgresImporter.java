@@ -75,9 +75,14 @@ public class PostgresImporter extends AbstractJDBCImporter {
 	}
 
 	@Override
-	protected String getRowCountQuery(String qualifiedTableName) {
-		return "SELECT COUNT(*) AS "+ ROW_COUNT_ALIAS +
-				" FROM "+ qualifiedTableName;
+	protected String getRowCountQuery(String originalTableName) {
+		String schema = this.getSchema();
+		return "SELECT c.reltuples AS " + ROW_COUNT_ALIAS + " " +
+				"FROM pg_class c " +
+				"JOIN pg_namespace n ON n.oid = c.relnamespace " +
+				"WHERE UPPER(n.nspname) = UPPER('" + schema + "') " +
+				"AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
+				"AND c.relkind = 'r';";
 	}
 
 }

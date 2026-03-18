@@ -26,25 +26,6 @@ public interface DatasourceRepository extends DatabaseEntityRepository<Datasourc
 			"  UPPER(d.dbname) LIKE UPPER(concat('%', ?1,'%')) )")
 	Page<DatasourceDBO> findBySubstring(String substring, Pageable pageable);
 
-	@Query("SELECT d FROM datasource d " +
-			"WHERE ( " +
-			"  UPPER(d.name) LIKE UPPER(concat('%', ?1,'%')) OR " +
-			"  UPPER(d.url) LIKE UPPER(concat('%', ?1,'%')) OR " +
-			"  UPPER(d.username) LIKE UPPER(concat('%', ?1,'%')) OR " +
-			"  UPPER(d.dbname) LIKE UPPER(concat('%', ?1,'%')) ) " +
-			"AND d.status = ?2 " +
-			"AND d.id IN ?3")
-	Page<DatasourceDBO> findBySubstringAndStatusAndIdIn(String substring, String status,List<Long> datasourceIds, Pageable pageable);
-
-	@Query("SELECT d FROM datasource d " +
-			"WHERE d.status = ?1 " +
-			"AND d.id IN ?2")
-	Page<DatasourceDBO> findByStatusAndIdIn(String status,List<Long> datasourceIds, Pageable pageable);
-
-	@Query("SELECT d FROM datasource d " +
-			"WHERE d.status = ?1 ")
-	List<DatasourceDBO> findByStatus(String status);
-
 	List<DatasourceDBO> findAll();
 
 	@Modifying

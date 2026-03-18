@@ -10,16 +10,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface PotentialDuplicateRepository extends DatabaseEntityRepository<PotentialDuplicateDBO> {
-	@Modifying
-	@Query("DELETE FROM potential_duplicate d " +
-			"WHERE d.entityId IN ( " +
-			"\tSELECT e.id FROM entity e CROSS JOIN " +
-			"\tnamespace n " +
-			"\tWHERE n.ownerUserId = ?1 " +
-			"\tAND e.namespaceId = n.id )")
-	void deleteByOwnerId(String userId);
-
-	void deleteByEntityId(Long entityId);
 
 	@Modifying
 	@Query("DELETE FROM potential_duplicate d " +
@@ -29,6 +19,4 @@ public interface PotentialDuplicateRepository extends DatabaseEntityRepository<P
 			" GROUP BY potentialDuplicateId " +
 			" HAVING count(*) <= 1 )")
 	void deleteWhereRowCountLessOrEqualOne();
-
-	Page<PotentialDuplicateDBO> findByEntityId(Long entityId, Pageable pageable);
 }

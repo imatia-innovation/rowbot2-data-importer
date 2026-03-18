@@ -20,6 +20,7 @@ public class MssqlImporter extends AbstractJDBCImporter {
         sqlServerDatasource.setUser(datasource.getUsername());
         sqlServerDatasource.setPassword(datasource.getPass());
         sqlServerDatasource.setDatabaseName(datasource.getDbname());
+        sqlServerDatasource.setTrustServerCertificate(true);
         return sqlServerDatasource;
     }
 
@@ -32,7 +33,8 @@ public class MssqlImporter extends AbstractJDBCImporter {
         return "SELECT * FROM " + qualifiedTableName + " ORDER BY (SELECT NULL) OFFSET ? ROWS";
     }
 
-    public String getRowCountQuery(String qualifiedTableName) {
+    public String getRowCountQuery(String originalTableName) {
+        String qualifiedTableName = this.getQualifiedTableName(originalTableName);
         return "SELECT SUM(p.rows) AS '" + ROW_COUNT_ALIAS + "' " +
                 "from sys.partitions p " +
                 "WHERE p.object_id = OBJECT_ID('" + qualifiedTableName + "') " +

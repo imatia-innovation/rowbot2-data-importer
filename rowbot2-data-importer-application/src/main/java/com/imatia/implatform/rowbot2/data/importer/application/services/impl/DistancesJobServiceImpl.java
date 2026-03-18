@@ -56,9 +56,4 @@ public class DistancesJobServiceImpl extends AbstractCRUDServiceImpl<DistancesJo
 		repo.deleteByDatasourceId(datasourceId);
 	}
 
-	@Override
-	public boolean existsByJobId(String jobId){
-		return repo.existsByJobId(jobId);
-	}
-
 }

@@ -15,5 +15,11 @@ logging:
   level:
     com.imatia: DEBUG
     org.springframework.boot.autoconfigure: INFO
+importers:
+  page_size: 10000
+retries:
+  default:
+    max_attempts: 5
+    ms_to_retry: 3
 server:
   port: 8083
