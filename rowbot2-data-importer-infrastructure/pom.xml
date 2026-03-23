@@ -11,9 +11,12 @@
 
     <artifactId>rowbot2-data-importer-infrastructure</artifactId>
     <packaging>pom</packaging>
+
     <modules>
         <module>rowbot2-data-importer-infrastructure-in-rest</module>
-        <module>rowbot2-data-importer-infrastructure-out-jdbc</module>
+        <module>rowbot2-data-importer-infrastructure-out-jpa</module>
+        <module>rowbot2-data-importer-infrastructure-out-rest</module>
+        <module>rowbot2-data-importer-infrastructure-core</module>
     </modules>
 
     <properties>

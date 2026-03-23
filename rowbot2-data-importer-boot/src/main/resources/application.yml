@@ -5,8 +5,17 @@ environment:
 logging:
   level:
     root: INFO
-
-
+multitenancy:
+  datasource:
+    minimum-idle: 0
+    maximum-pool-size: 10
+    connection-timeout: 30000
+    idle-timeout: 30000
+    max-lifetime: 1800000
+retries:
+  default:
+    max_attempts: ${RETRIES_DEFAULT_MAX_ATTEMPTS}
+    ms_to_retry: ${RETRIES_DEFAULT_MS_TO_RETRY}
 server:
   port: 8080
   servlet:
@@ -18,3 +27,18 @@ spring:
     serialization:
       indent_output: true
     default-property-inclusion: non_null
+  datasource:
+    embedded-database-connection: none
+  jpa:
+    hibernate:
+      ddl-auto: none
+      defer-datasource-initialization: true
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
+    properties:
+      hibernate:
+        dialect: 'org.hibernate.dialect.PostgreSQLDialect'
+        query:
+          cte:
+            use_materialized: false
+          mutation_strategy: org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy

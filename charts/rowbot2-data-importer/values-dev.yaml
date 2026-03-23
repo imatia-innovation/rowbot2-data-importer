@@ -146,3 +146,11 @@ storage:
 
 jvmOptions: "-Xmx3g -Xms512m"  ## adjust according to pod requests
 
+importers:
+  page_size: 1000
+
+retries:
+  default:
+    max_attempts: 5
+    ms_to_retry: 30000
+

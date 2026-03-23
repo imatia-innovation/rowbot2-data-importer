@@ -21,17 +21,18 @@
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
             <artifactId>rowbot2-data-importer-application</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-model</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <artifactId>rowbot2-data-importer-domain</artifactId>
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-openapi</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>

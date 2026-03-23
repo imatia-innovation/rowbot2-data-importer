@@ -173,6 +173,12 @@ spec:
                 name: {{ .Values.s3.secret | default  (printf "%s-s3-secret" (include "fullname" .))  }}
                 key: secretKey
         {{- end }}
+          - name: IMPORTERS_PAGE_SIZE
+            value: "{{ .Values.importers.page_size }}"
+          - name: RETRIES_DEFAULT_MAX_ATTEMPTS
+            value: "{{ .Values.retries.default.max_attempts }}"
+          - name: RETRIES_DEFAULT_MS_TO_RETRY
+            value: "{{ .Values.retries.default.ms_to_retry }}"
           ports:
           - name: http
             containerPort: {{ .Values.service.internalPort }}
