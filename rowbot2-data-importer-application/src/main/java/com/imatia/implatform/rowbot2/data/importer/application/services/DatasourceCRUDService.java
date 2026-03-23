@@ -16,7 +16,4 @@ public interface DatasourceCRUDService extends CRUDService<Datasource, Long> {
 	Datasource updateStatus(Long datasourceId, String newStatus, String errorDescription);
 
 	Datasource updateLastImportedPage(Long datasourceId, String statusDescription, String lastImportedTableName, Integer lastImportedPageIndex);
-
-	void removeRelations(Long datasourceId);
-
 }

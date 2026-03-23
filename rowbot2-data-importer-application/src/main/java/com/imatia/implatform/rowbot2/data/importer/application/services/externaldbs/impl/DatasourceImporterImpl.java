@@ -21,8 +21,6 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
 import com.imatia.implatform.rowbot2.data.importer.application.services.sql.postgres.PostgresDdlGenerator;
 
-import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceConnectionSettings;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceCredentialsContext;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +36,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -77,60 +73,46 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	@Autowired
 	Retrier retrier;
 
-	private final Map<Long, CompletableFuture<Void>> currentlyImportingDatasources = new ConcurrentHashMap<>();
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
 	@Override
-	public void importDatasource(final Long datasourceId, DataSourceConnectionSettings cs, boolean resumingImport) {
-		if(!currentlyImportingDatasources.containsKey(datasourceId)){
-
-			if (!resumingImport) {
-				LOGGER.info("Removing previous relations for Datasource with Id: {}", datasourceId);
-				datasourceCRUDService.removeRelations(datasourceId);
-			}
+	public void importDatasource(final Long datasourceId, boolean resumingImport) {
 
 			LOGGER.info("{} Datasource with Id: {}", resumingImport? "Resuming" : "Importing", datasourceId);
-			Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
+			try {
+				Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
 
-			CompletableFuture<Void> importDatasourceFuture = CompletableFuture.supplyAsync(() ->  {
-				DataSourceCredentialsContext.set(cs);
-				try {
-
-					String connectionError = checkConnection(datasource);
-					if(StringUtils.hasText(connectionError)){
-						throw new RowbotRuntimeException("There was an error trying to connect to the datasource, Error: "+ connectionError);
-					}
-
-					ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
-					LOGGER.info("Deleting permissions for DS {}", datasourceId);
-					permissionService.deletePermissionsOfDatasource(datasourceId);
-					LOGGER.info("Deleting relations for DS {}", datasourceId);
-					datarelationService.deleteByDatasourceId(datasourceId);
-					LOGGER.info("Importing DS {} metadata",datasourceId);
-					Datasource savedDatasource = importDatasourceMetadata(datasource, externalDBImporter, resumingImport);
-					LOGGER.info("Importing DS {} primary Keys", datasourceId);
-					importDatatablePks(savedDatasource,externalDBImporter);
-					LOGGER.info("Importing DS {} data",datasourceId);
-					importOriginalData(savedDatasource,externalDBImporter);
-					LOGGER.info("Creating permissions for DS {} ",datasourceId);
-					permissionService.createPermissionsForDatasource(savedDatasource);
-					LOGGER.info("Creating relations for DS {} ",datasourceId);
-					importRelations(datasource,externalDBImporter);
-				}catch(Throwable t){
-					LOGGER.error(t.getMessage(), t);
-					//TODO: función callback para que rowbot2 actualice el estado
-					datasourceCRUDService.updateStatus(datasourceId, DatasourceStatus.ERROR.getDescription(), t.getMessage());
-				}finally {
-					 //TODO: función callback para que rowbot2 actualice el estado
-					currentlyImportingDatasources.remove(datasourceId);
-					DataSourceCredentialsContext.clear();
-					LOGGER.info("DS with Id: {} import finished.",datasourceId);
+				String connectionError = checkConnection(datasource);
+				if(StringUtils.hasText(connectionError)){
+					throw new RowbotRuntimeException("There was an error trying to connect to the datasource, Error: "+ connectionError);
 				}
-				return null;
-			});
-			currentlyImportingDatasources.put(datasourceId, importDatasourceFuture);
-		}
+
+				ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
+				LOGGER.info("Deleting permissions for DS {}", datasourceId);
+				permissionService.deletePermissionsOfDatasource(datasourceId);
+				LOGGER.info("Deleting relations for DS {}", datasourceId);
+				datarelationService.deleteByDatasourceId(datasourceId);
+				LOGGER.info("Importing DS {} metadata",datasourceId);
+				Datasource savedDatasource = importDatasourceMetadata(datasource, externalDBImporter, resumingImport);
+				LOGGER.info("Importing DS {} primary Keys", datasourceId);
+				importDatatablePks(savedDatasource,externalDBImporter);
+				LOGGER.info("Importing DS {} data",datasourceId);
+				importOriginalData(savedDatasource,externalDBImporter);
+				LOGGER.info("Creating permissions for DS {} ",datasourceId);
+				permissionService.createPermissionsForDatasource(savedDatasource);
+				LOGGER.info("Creating relations for DS {} ",datasourceId);
+				importRelations(datasource,externalDBImporter);
+			}
+			catch(Throwable t){
+				LOGGER.error(t.getMessage(), t);
+				//TODO: función callback para que rowbot2 actualice el estado
+				datasourceCRUDService.updateStatus(datasourceId, DatasourceStatus.ERROR.getDescription(), t.getMessage());
+			}
+			finally {
+				//TODO: función callback para que rowbot2 actualice el estado
+				LOGGER.info("DS with Id: {} import finished.",datasourceId);
+			}
+
 	}
 
 	private String checkConnection(Datasource datasource){

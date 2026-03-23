@@ -50,12 +50,12 @@
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>rowbot2-data-importer-infrastructure-in-rest</artifactId>
+				<artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>${project.groupId}</groupId>
-				<artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
+				<artifactId>rowbot2-data-importer-infrastructure-in-rest</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

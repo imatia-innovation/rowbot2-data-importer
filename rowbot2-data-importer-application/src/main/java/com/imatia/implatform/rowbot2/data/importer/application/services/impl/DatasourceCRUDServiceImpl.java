@@ -3,13 +3,11 @@ package com.imatia.implatform.rowbot2.data.importer.application.services.impl;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.application.services.*;
 import com.imatia.implatform.rowbot2.data.importer.application.services.base.AbstractCRUDServiceImpl;
-import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatasourceDBO;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatasourceTypeDBO;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity.DatatableDBO;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdNotExistentOnDBException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RelatedEntityNotFoundInDBException;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatacolumnToRefColumnDistanceRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatasourceRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatasourceTypeRepository;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatatableRepository;
@@ -25,50 +23,22 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasource, DatasourceDBO, DatasourceRepository> implements DatasourceCRUDService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceCRUDServiceImpl.class);
-	@Autowired
-	PermissionService permissionService;
 
-	@Autowired
-	ImportedDbClient importedDbClient;
 	@Autowired
 	DatasourceTypeRepository dsTypeRepository;
 
 	@Autowired
 	DatatableRepository datatableRepository;
 
-	@Autowired
-	DatarelationService datarelationService;
-
-	@Autowired
-	PotentialDuplicatesService potentialDuplicatesService;
-
-	@Autowired
-	ConsolidatedDuplicatesService consolidatedDuplicatesService;
-
-	@Autowired
-	TransformationRulesService transformationRulesService;
-
-	@Autowired
-	ValidationRulesService validationRulesService;
-
-	@Autowired
-	DistancesJobService distancesJobService;
-
-	@Autowired
-	DatacolumnToRefColumnDistanceRepository distanceRepository;
-
-	private final Logger logger = LoggerFactory.getLogger(DatasourceCRUDServiceImpl.class);
-
 	@Override
 	public Optional<Datasource> read(final Long entityId) {
-		if(!repo.existsById(entityId) || !permissionService.isDatasourceVisible(entityId)){
+		if(!repo.existsById(entityId)){
 			return Optional.empty();
 		}
 		return repo.findById(entityId)
@@ -82,92 +52,16 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 				repo.findBySubstring(search, pageable));
 	}
 
-	@Override
-	public void delete(final Long datasourceId) {
-		if(!repo.existsById(datasourceId) || !permissionService.isDatasourceVisible(datasourceId)){
-			throw new IdNotExistentOnDBException("Datasource", datasourceId);
-		}
-		removeRelations(datasourceId);
-		super.delete(datasourceId);
-	}
-
-	@Override
-	public Integer delete(final List<Long> datasourceIds){
-		List<Long> visibleDatasources = permissionService.getCurrentUserVisibleDatasources();
-		List<Long> datasourcesToDelete =  datasourceIds.stream()
-				.filter(visibleDatasources::contains)
-				.filter(this::removeRelationsQuiet)
-				.collect(Collectors.toList());
-		return super.delete(datasourcesToDelete);
-	}
-
-	//This method is used for delete of collections, the default behaviour of those deletes don't raise exceptions, but just returns how many was succesfully deleted
-	private boolean removeRelationsQuiet(Long datasourceId) {
-		try {
-			this.removeRelations(datasourceId);
-		}catch(Exception e) {
-			logger.error("There was an error trying to delete the datasource with id: "+ datasourceId, e);
-			return false;
-		}
-		return true;
-	}
-
+	// TODO: buscar todos los updates de estado del datasource, esto lo debería hacer rowbot2
 	@Override
 	public Datasource update(final Datasource datasource){
-		if(!repo.existsById(datasource.getId()) || !permissionService.isDatasourceVisible(datasource.getId())){
+		if(!repo.existsById(datasource.getId())){
 			throw new IdNotExistentOnDBException("Datasource", datasource.getId());
 		}
-		removeRelations(datasource.getId());
 		return super.update(datasource);
 	}
 
-	@Override
-	public void removeRelations(Long datasourceId) {
-		logger.debug("Removing relations for DS {}",datasourceId);
-		datarelationService.deleteByDatasourceId(datasourceId);
-		logger.debug("Removing permissions for DS {}",datasourceId);
-		permissionService.deletePermissionsOfDatasource(datasourceId);
-		logger.debug("Removing distances for DS {}",datasourceId);
-		distancesJobService.deleteByDatasourceId(datasourceId);
-		distanceRepository.deleteDistancesByDatasourceId(datasourceId);
-		DatasourceDBO oldDatasource = repo.findById(datasourceId)
-				.orElseThrow(() -> new IdNotExistentOnDBException(this.getClass().getSimpleName(), datasourceId));
-		logger.debug("Removing tables for DS {}",datasourceId);
-		deleteAllImportedTables(oldDatasource);
-		repo.unlinkAttributes(datasourceId);
-		repo.unlinkEntities(datasourceId);
-
-		potentialDuplicatesService.deleteFromDatasource(datasourceId);
-		consolidatedDuplicatesService.deleteFromDatasource(datasourceId);
-		transformationRulesService.deleteByDatasourceId(datasourceId);
-		validationRulesService.deleteByDatasourceId(datasourceId);
-	}
-
-	private void deleteAllImportedTables(DatasourceDBO oldDatasource) {
-		for (DatatableDBO table : oldDatasource.getTables()) {
-			LOGGER.debug("Removing table {}/{}: {}", oldDatasource.getTables().indexOf(table), oldDatasource.getTables().size(), table.getName());
-			importedDbClient.deleteTable(table.getName());
-		}
-
-	}
-
-	@Override
-	protected String validateForCreation(Datasource datasource){
-		return repo.findByName(datasource.getName())
-				.map(datasourceDBO -> String.format(ErrorMessages.UNIQUE_FIELD_VIOLATED_FORMAT_MESSAGE,
-						"Datasource", "name", datasource.getName()))
-				.orElse(null);
-	}
-
-	@Override
-	protected String validateForUpdate(Datasource datasource){
-		return repo.findByName(datasource.getName())
-				.filter(datasourceDBO -> !datasourceDBO.getId().equals(datasource.getId()))
-				.map(datasourceDBO -> String.format(ErrorMessages.UNIQUE_FIELD_VIOLATED_FORMAT_MESSAGE,
-						"Datasource", "name", datasource.getName()))
-				.orElse(null);
-	}
-
+	// TODO: buscar todos los updates de estado del datasource, esto lo debería hacer rowbot2
 	@Override
 	public Datasource updateIncludingTables(Datasource datasource){
 		DatasourceDBO dbo = super.toDBO(datasource);
@@ -175,11 +69,13 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return fromDBO(repo.save(dbo));
 	}
 
+	// TODO: buscar todos los updates de estado del datasource, esto lo debería hacer rowbot2
 	@Override
 	public Datasource updateStatus(Long datasourceId, String newStatus){
 		return updateStatus(datasourceId, newStatus, null);
 	}
 
+	// TODO: buscar todos los updates de estado del datasource, esto lo debería hacer rowbot2
 	@Override
 	public Datasource updateStatus(Long datasourceId, String newStatus, String errorDescription){
 		Datasource oldDatasource = read(datasourceId)
@@ -191,6 +87,7 @@ public class DatasourceCRUDServiceImpl extends AbstractCRUDServiceImpl<Datasourc
 		return super.update(newDatasource);
 	}
 
+	// TODO: este update si es de rowbot2-data-import
 	@Override
 	public Datasource updateLastImportedPage(Long datasourceId, String statusDescription, String lastImportedTableName, Integer lastImportedPageIndex){
 		Datasource oldDatasource = read(datasourceId)

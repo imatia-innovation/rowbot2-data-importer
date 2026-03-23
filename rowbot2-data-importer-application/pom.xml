@@ -24,11 +24,11 @@
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
+            <artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
+            <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
@@ -43,7 +43,6 @@
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
-        <!-- TODO: this should be into a infra module -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>

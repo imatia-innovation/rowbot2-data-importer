@@ -1,11 +1,16 @@
 package com.imatia.implatform.rowbot2.data.importer.application.usecase;
 
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.DatasourceImporter;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceConnectionSettings;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceCredentialsContext;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jdbc.tenant.MultiTenantDataSourceProvider;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContextAware;
+
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceConnectionSettings;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.MultiTenantDataSourceProvider;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @AllArgsConstructor
@@ -13,17 +18,20 @@ public class ImportProcessUseCase {
 
     private DatasourceImporter datasourceImporter;
 
-    MultiTenantDataSourceProvider multiTenantDataSourceProvider;
+    private MultiTenantDataSourceProvider multiTenantDataSourceProvider;
 
-    public void handle(Long datasourceId, DataSourceConnectionSettings cs, boolean resume) {
-        // TODO: ASYNC
-        DataSourceCredentialsContext.set(cs);
-        //TODO: ¿Es necesario forzar de esta manera?
-        multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get());
-        datasourceImporter.importDatasource(datasourceId, cs, resume);
-    }
+    private final Map<Long, CompletableFuture<Void>> currentlyImportingDatasources = new ConcurrentHashMap<>();
 
-    public void handle(){
+    public void handle(Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings, boolean resume) {
+
+        if (!currentlyImportingDatasources.containsKey(datasourceId)) {
+
+            CompletableFuture<Void> future = CompletableFuture.runAsync(new TenantContextAware(dataSourceConnectionSettings,
+                    () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
+
+            currentlyImportingDatasources.put(datasourceId, future);
+            future.whenComplete((result, ex) -> currentlyImportingDatasources.remove(datasourceId));
+        }
 
     }
 

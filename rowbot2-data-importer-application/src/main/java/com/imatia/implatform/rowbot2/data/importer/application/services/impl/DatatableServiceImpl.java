@@ -29,7 +29,7 @@ public class DatatableServiceImpl extends AbstractCRUDServiceImpl<Datatable, Dat
 
 	@Override
 	public boolean existsAndItsVisible(final Long datatableId){
-		return repo.existsById(datatableId) && permissionService.isDatatableVisible(datatableId);
+		return repo.existsById(datatableId);
 	}
 
 	@Override

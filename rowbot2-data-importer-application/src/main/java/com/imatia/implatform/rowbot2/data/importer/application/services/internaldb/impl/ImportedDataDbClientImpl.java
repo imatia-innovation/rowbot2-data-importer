@@ -17,12 +17,12 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.sql.post
 import com.imatia.implatform.rowbot2.data.importer.application.services.sql.postgres.util.PostgresqlUtils;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdDuplicatedException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RowbotRuntimeException;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.tenant.DataSourceCredentialsContext;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.EntityQuery;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.NativeRowId;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.TableQuery;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.consts.PaginationConsts;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jdbc.tenant.MultiTenantDataSourceProvider;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceCredentialsContext;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.MultiTenantDataSourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

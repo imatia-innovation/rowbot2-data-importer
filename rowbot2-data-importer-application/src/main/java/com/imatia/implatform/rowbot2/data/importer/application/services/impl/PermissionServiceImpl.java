@@ -1,7 +1,6 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.impl;
 
 import com.imatia.implatform.rowbot2.data.importer.domain.model.*;
-import com.imatia.implatform.rowbot2.data.importer.application.services.GroupService;
 import com.imatia.implatform.rowbot2.data.importer.application.services.PermissionService;
 import com.imatia.implatform.rowbot2.data.importer.application.services.base.AbstractCRUDServiceImpl;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.NotImplementedException;
@@ -30,11 +29,6 @@ public class PermissionServiceImpl extends AbstractCRUDServiceImpl<Permission, P
 
 	@Autowired
 	DatasourceRepository datasourceRepo;
-
-	@Autowired
-	GroupService groupService;
-
-	final List<String> rolesWithFullVisibility = List.of("admin", "app-admin");
 
 	@Override
 	public void createPermissionsForDatasource(Datasource datasource){
@@ -99,50 +93,6 @@ public class PermissionServiceImpl extends AbstractCRUDServiceImpl<Permission, P
 				dboPage.getPageable(),
 				dboPage.getTotalElements()
 		);
-	}
-
-	@Override
-	public boolean hasCurrentUserCompleteVisibility(){
-		//TODO: Pass user role into security context
-		/*
-		if(SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof String){
-			return SecurityContextHolder.getContext().getAuthentication().getPrincipal().equals(DataEngineConsts.DATAENGINE_USER);
-		}
-		return ((UserInformation) SecurityContextHolder.getContext().getAuthentication().getPrincipal()).getAuthorities().stream()
-					.map(GrantedAuthority::getAuthority)
-					.anyMatch(rolesWithFullVisibility::contains);
-		 */
-		return true;
-	}
-
-	@Override
-	public List<Long> getCurrentUserVisibleDatasources(){
-		return hasCurrentUserCompleteVisibility()?
-			datasourceRepo.findAll().stream()
-					.map(DatasourceDBO::getId)
-					.collect(Collectors.toList()) :
-			repo.findVisibleDatasourceIdsByUserGroups(calculateCurrentUserGroupIds());
-	}
-
-	@Override
-	public boolean isDatasourceVisible(Long datasourceId){
-		return datasourceRepo.existsById(datasourceId) && (
-					hasCurrentUserCompleteVisibility() ||
-					repo.isDatasourceVisible(datasourceId, calculateCurrentUserGroupIds()));
-	}
-
-	@Override
-	public boolean isDatatableVisible(Long datatableId){
-		return tableRepo.existsById(datatableId) && (
-				hasCurrentUserCompleteVisibility() ||
-						repo.isDatatableVisible(datatableId, calculateCurrentUserGroupIds()));
-	}
-
-	@Override
-	public List<Long> calculateCurrentUserGroupIds(){
-		return groupService.getCurrentUserGroups().stream()
-				.map(Group::getId)
-				.collect(Collectors.toList());
 	}
 
 }

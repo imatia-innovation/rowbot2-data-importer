@@ -28,7 +28,7 @@
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>
-            <artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
+            <artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
         </dependency>
         <dependency>
             <groupId>com.imatia.implatform.rowbot2</groupId>

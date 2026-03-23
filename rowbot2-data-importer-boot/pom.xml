@@ -26,10 +26,6 @@
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>rowbot2-data-importer-infrastructure-out-jdbc</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
             <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
         </dependency>
         <dependency>

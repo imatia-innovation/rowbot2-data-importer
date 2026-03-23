@@ -1,12 +1,3 @@
-app:
-  async:
-    thread-name-prefix: async-
-    core-size: 4
-    max-size: 12
-    queue-capacity: 200
-    keep-alive: 30s
-    await-termination: true
-    await-termination-period: 10s
 build:
   version: '@project.version@'
 environment:
@@ -14,6 +5,13 @@ environment:
 logging:
   level:
     root: INFO
+multitenancy:
+  datasource:
+    minimum-idle: 0
+    maximum-pool-size: 10
+    connection-timeout: 30000
+    idle-timeout: 30000
+    max-lifetime: 1800000
 retries:
   default:
     max_attempts: ${RETRIES_DEFAULT_MAX_ATTEMPTS}
@@ -44,5 +42,3 @@ spring:
           cte:
             use_materialized: false
           mutation_strategy: org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy
-  main:
-    allow-circular-references: true #TODO: review that

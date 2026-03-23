@@ -14,15 +14,4 @@ public interface PermissionService extends CRUDService<Permission, Long> {
 	void createPermissionsForDatasource(Datasource datasource);
 
 	void deletePermissionsOfDatasource(Long datasourceId);
-
-	boolean hasCurrentUserCompleteVisibility();
-
-	List<Long> getCurrentUserVisibleDatasources();
-
-	boolean isDatasourceVisible(Long datasourceId);
-
-	boolean isDatatableVisible(Long datatableId);
-
-	List<Long> calculateCurrentUserGroupIds();
-
 }
