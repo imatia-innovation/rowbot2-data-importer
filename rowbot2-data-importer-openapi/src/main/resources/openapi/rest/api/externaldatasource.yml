@@ -31,21 +31,20 @@ components:
           description: The external datasource id to be imported
           type: integer
           format: int64
-        tenantId:
-          description: Tenant identifier
-          type: integer
-          format: int64
         resume:
           description: Flag to resume previous import or re-import everything
           type: boolean
           default: false
+        tenantCallbackToken:
+          description: Tenant token for callback
+          type: string
         tenantDataSourceConnectionSettings:
           { $ref: '#/components/schemas/DataSourceConnectionSettingsDTO' }
       required:
         - externalDatasourceId
-        - tenantId
-        - tenantDataSourceConnectionSettings
         - resume
+        - tenantCallbackToken
+        - tenantDataSourceConnectionSettings
     DataSourceConnectionSettingsDTO:
       type: object
       properties:

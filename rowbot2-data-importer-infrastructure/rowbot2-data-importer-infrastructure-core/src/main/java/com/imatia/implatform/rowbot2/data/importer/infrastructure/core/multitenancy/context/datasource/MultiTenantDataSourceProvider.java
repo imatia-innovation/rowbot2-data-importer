@@ -12,7 +12,7 @@ public class MultiTenantDataSourceProvider {
 
     private final MultiTenantDataSourceProperties props;
     private final MultiTenantRoutingDataSource routing;
-    private final Map<String, DataSource> cache = new ConcurrentHashMap<>();
+    private final Map<Integer, DataSource> cache = new ConcurrentHashMap<>();
 
     public MultiTenantDataSourceProvider(MultiTenantRoutingDataSource routing, MultiTenantDataSourceProperties props) {
         this.routing = routing;
@@ -20,17 +20,13 @@ public class MultiTenantDataSourceProvider {
     }
 
     public DataSource getOrCreate(DataSourceConnectionSettings cs) {
-        String key = DataSourceCredentialsContext.key();
-        if (key == null) {
-            throw new IllegalStateException("CredentialsContext vacío al crear DataSource");
-        }
 
-        return cache.computeIfAbsent(key, k -> {
+        return cache.computeIfAbsent(cs.hashCode(), k -> {
             HikariDataSource ds = new HikariDataSource();
 
-            ds.setJdbcUrl(cs.getUrl());
-            ds.setUsername(cs.getUsername());
-            ds.setPassword(cs.getPassword());
+            ds.setJdbcUrl(cs.url());
+            ds.setUsername(cs.username());
+            ds.setPassword(cs.password());
 
             ds.setMaximumPoolSize(props.getMaximumPoolSize());
             ds.setConnectionTimeout(props.getConnectionTimeout());
@@ -38,9 +34,9 @@ public class MultiTenantDataSourceProvider {
             ds.setMaxLifetime(props.getMaxLifetime());
             ds.setMinimumIdle(props.getMinimumIdle());
 
-            ds.setPoolName("tenant-" + k);
+            ds.setPoolName("tenant-" + cs.username());
 
-            routing.register(k, ds);
+            routing.register(ds);
             return ds;
         });
     }

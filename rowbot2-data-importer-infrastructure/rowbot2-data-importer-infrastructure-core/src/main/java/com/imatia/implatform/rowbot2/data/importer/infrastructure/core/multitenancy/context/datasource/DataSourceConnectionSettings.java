@@ -5,17 +5,8 @@ import lombok.Data;
 /**
  * Represents generic data source connection settings.
  */
-@Data
-public class DataSourceConnectionSettings {
+public record DataSourceConnectionSettings (String url, String dbName, String username, String password, String schema) {
 
-    private String url;
-
-    private String dbName;
-
-    private String username;
-
-    private String password;
-
-    private String schema;
 }
+
 
