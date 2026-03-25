@@ -18,7 +18,7 @@ public class MultiTenantRoutingDataSource extends AbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        if (TenantContext.get().connectionSettings() == null) return null;
+        if (TenantContext.get() == null || TenantContext.get().connectionSettings() == null) return null;
         return TenantContext.get().connectionSettings().hashCode();
     }
 

@@ -25,12 +25,13 @@ public class MultiTenantDataSourceConfig {
         return routing;
     }
 
-    /** DS “dummy” para fallar si no registraste aún el tenant. */
+    /** DS “dummy” will fail if current thread doesn't have tenant context. */
     static class FailingDataSource implements DataSource {
         private static IllegalStateException ex() {
             return new IllegalStateException(
-                    "No hay DataSource registrado para el tenant actual. " +
-                            "Fija CredentialsContext y llama provider.getOrCreate(...) antes de acceder a BD."
+                    "No DataSource is registered for the current tenant. " +
+                            "Set the tenant context, in current thread, through TenantContextAware " +
+                            "before attempting to access the database."
             );
         }
         @Override public Connection getConnection() { throw ex(); }
