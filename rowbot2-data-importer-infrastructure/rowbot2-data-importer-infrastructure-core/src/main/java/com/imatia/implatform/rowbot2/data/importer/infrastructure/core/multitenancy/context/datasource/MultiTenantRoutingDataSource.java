@@ -1,5 +1,6 @@
 package com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource;
 
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContext;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.sql.DataSource;
@@ -17,12 +18,8 @@ public class MultiTenantRoutingDataSource extends AbstractRoutingDataSource {
 
     @Override
     protected Object determineCurrentLookupKey() {
-        String key = DataSourceCredentialsContext.key();
-        if (key == null) {
-            // throw new IllegalStateException("No ConnectionSettings in CredentialsContext");
-            return "default";
-        }
-        return key;
+        if (TenantContext.get().connectionSettings() == null) return null;
+        return TenantContext.get().connectionSettings().hashCode();
     }
 
     public synchronized void initializeEmptyTargets(DataSource defaultDs) {
@@ -33,8 +30,8 @@ public class MultiTenantRoutingDataSource extends AbstractRoutingDataSource {
         super.afterPropertiesSet();
     }
 
-    public synchronized void register(String key, DataSource ds) {
-        dynamicTargets.put(key, ds);
+    public synchronized void register(DataSource ds) {
+        dynamicTargets.put(determineCurrentLookupKey(), ds);
         super.setTargetDataSources(dynamicTargets);
         super.afterPropertiesSet();
     }

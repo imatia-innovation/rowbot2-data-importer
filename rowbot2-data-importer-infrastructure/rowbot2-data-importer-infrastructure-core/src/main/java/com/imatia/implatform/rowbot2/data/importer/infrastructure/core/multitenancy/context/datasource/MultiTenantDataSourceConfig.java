@@ -3,6 +3,7 @@ package com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multiten
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Primary;
 
 import javax.sql.DataSource;
@@ -16,6 +17,7 @@ public class MultiTenantDataSourceConfig {
 
     @Bean
     @Primary
+    @Lazy
     public MultiTenantRoutingDataSource dataSource() {
         MultiTenantRoutingDataSource routing = new MultiTenantRoutingDataSource();
         // DataSource por defecto que falla con mensaje explicativo

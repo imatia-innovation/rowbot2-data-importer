@@ -21,7 +21,7 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.util.EntityQuery
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.NativeRowId;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.TableQuery;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.util.consts.PaginationConsts;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceCredentialsContext;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContext;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.MultiTenantDataSourceProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 		}
 		try{
 			return JdbcPageStreamer.streamPages(
-					multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get()),
+					multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()),
 				PostgresDqlGenerator.buildFullTableQuery(datatable, requestedColumns),
 				pageSize);
 		} catch (SQLException e) {
@@ -428,8 +428,8 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 	}
 
 	private boolean tableExists(String tableName) {
-		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get()).getConnection();
-				ResultSet tableResultSet = connection.getMetaData().getTables(null, null, tableName, new String[] {"TABLE"})) {
+		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()).getConnection();
+			 ResultSet tableResultSet = connection.getMetaData().getTables(null, null, tableName, new String[] {"TABLE"})) {
 			LOGGER.debug("Checking if table {} exists", tableName);
 			return tableResultSet.next();
 		} catch (SQLException e) {
@@ -472,8 +472,8 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 	@Override
 	public Map<String, Map<String, String>> getTypedColumnsGroupedByTable(){
 			Map<String, Map<String, String>> typedColumnsByTable = new HashMap<>();
-			try(Connection connection = multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get()).getConnection();
-					ResultSet columnsResultSet = connection.getMetaData()
+			try(Connection connection = multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()).getConnection();
+				ResultSet columnsResultSet = connection.getMetaData()
 							.getColumns(null, PostgresqlConsts.DEFAULT_SCHEMA, getImportedTablesPattern(), null)) {
 				while (columnsResultSet.next()) {
 					String columnName = columnsResultSet.getString("COLUMN_NAME");
@@ -498,9 +498,9 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 	}
 
 	private <T> T executeQueryStatement(String query, SQLFunction<ResultSet, T> handler) {
-		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get()).getConnection();
-				Statement statement = connection.createStatement();
-				ResultSet rs = statement.executeQuery(query)) {
+		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()).getConnection();
+			 Statement statement = connection.createStatement();
+			 ResultSet rs = statement.executeQuery(query)) {
 			return handler.apply(rs);
 		} catch (SQLException e) {
 			throw new RuntimeException("Error running SQL: " + query + "\n" + e.getMessage(), e);
@@ -508,8 +508,8 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 	}
 
 	private int executeUpdateStatement(String query) {
-		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(DataSourceCredentialsContext.get()).getConnection();
-				Statement statement = connection.createStatement()){
+		try (Connection connection = multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()).getConnection();
+			 Statement statement = connection.createStatement()){
 			return statement.executeUpdate(query);
 		} catch (SQLException e) {
 			throw new RowbotDBWriteException("Error running SQL: " + query + "\n" + e.getMessage(), e);
