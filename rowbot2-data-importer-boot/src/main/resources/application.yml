@@ -37,6 +37,8 @@ spring:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     properties:
       hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
         dialect: 'org.hibernate.dialect.PostgreSQLDialect'
         query:
           cte:
