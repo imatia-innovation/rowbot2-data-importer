@@ -23,6 +23,10 @@
             <artifactId>rowbot2-data-importer-domain</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>

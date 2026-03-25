@@ -12,3 +12,8 @@ retries:
     ms_to_retry: 3
 server:
   port: 8085
+rowbot2-application:
+  server:
+    protocol: http
+    host: localhost
+    port: 8080

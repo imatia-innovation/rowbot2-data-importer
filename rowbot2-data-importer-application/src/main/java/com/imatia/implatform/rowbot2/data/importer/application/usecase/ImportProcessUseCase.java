@@ -28,12 +28,12 @@ public class ImportProcessUseCase {
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportProcessUseCase.class);
 
     public void handle(Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings,
-                       String callbackToken, boolean resume) {
+                       String callbackToken, String tenantId, boolean resume) {
 
         if (!currentlyImportingDatasources.containsKey(datasourceId)) {
 
             CompletableFuture<Void> future = CompletableFuture.runAsync(new TenantContextAware(dataSourceConnectionSettings,
-                    callbackToken, () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
+                    callbackToken, tenantId, () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
 
             currentlyImportingDatasources.put(datasourceId, future);
             future.whenComplete((result, ex) -> currentlyImportingDatasources.remove(datasourceId));

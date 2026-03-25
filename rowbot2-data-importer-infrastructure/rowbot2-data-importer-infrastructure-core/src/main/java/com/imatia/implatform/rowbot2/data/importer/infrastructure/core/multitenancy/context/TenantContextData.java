@@ -6,6 +6,6 @@ import lombok.Builder;
 /**
  * Tenant context data wrapper.
  */
-public record TenantContextData(DataSourceConnectionSettings connectionSettings, String callbackToken) {
+public record TenantContextData(DataSourceConnectionSettings connectionSettings, String callbackToken, String tenantId) {
 
 }

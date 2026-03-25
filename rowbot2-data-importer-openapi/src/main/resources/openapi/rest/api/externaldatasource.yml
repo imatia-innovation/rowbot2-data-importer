@@ -38,6 +38,9 @@ components:
         tenantCallbackToken:
           description: Tenant token for callback
           type: string
+        tenantId:
+          description: Tenant id for callback
+          type: string
         tenantDataSourceConnectionSettings:
           { $ref: '#/components/schemas/DataSourceConnectionSettingsDTO' }
       required:

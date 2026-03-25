@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class DatarelationServiceImpl implements DatarelationService {
 
 	@Autowired
@@ -27,13 +26,15 @@ public class DatarelationServiceImpl implements DatarelationService {
 	DatacolumnRepository datacolumnRepository;
 
 	@Override
+	@Transactional
 	public void createRelations(Long datasourceId, List<ExternalRelation> relations){
 		List <DatarelationDBO> relationsDBO = relations.stream()
 				.map(importedRelation-> externalRelationToDatarelation(datasourceId, importedRelation))
 				.collect(Collectors.toList());
-		repo.saveAll(relationsDBO);
+		repo.saveAllAndFlush(relationsDBO);
 	}
 
+	@Transactional
 	private DatarelationDBO externalRelationToDatarelation(Long datasourceId, ExternalRelation importedRelation) {
 		return DatarelationDBO.builder()
 				.originalConstraintName(importedRelation.getConstraintName())
@@ -49,6 +50,7 @@ public class DatarelationServiceImpl implements DatarelationService {
 	}
 
 	@Override
+	@Transactional
 	public void deleteByDatasourceId(Long datasourceId) {
 		repo.deleteByDatasourceId(datasourceId);
 	}
