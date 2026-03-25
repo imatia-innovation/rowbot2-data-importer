@@ -59,4 +59,28 @@ mvn spring-boot:run \
     ````
    --spring.profiles.active=local
    ````
-   
+
+# 🌐 REST Endpoints
+
+## 📡 Example: Sending a REST Request to `/externaldatasource`
+
+This project exposes a REST endpoint that allows triggering an external datasource import.
+
+### ▶️ HTTP Endpoint
+
+**Method:** `POST`  
+**URL:** `http://localhost:8085/externaldatasource`
+
+### 📝 Request Body Example
+
+```json
+{
+  "externalDatasourceId": 4,
+  "resume": false,
+  "tenantCallbackToken": "12345634548",
+  "tenantDataSourceConnectionSettings": {
+    "url": "jdbc:postgresql://localhost:5432/rowbot2_tenant_demo",
+    "username": "rowbot2_tenant_demo_user",
+    "password": "iLSWKIVYZgQJe85fnYJuoOCIV4DfS5Hj"
+  }
+}
