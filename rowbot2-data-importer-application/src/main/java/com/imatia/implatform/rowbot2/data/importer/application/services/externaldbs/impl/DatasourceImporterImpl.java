@@ -291,6 +291,8 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 				}
 			}
 		});
+
+		//TODO: una vez finalizada la importación, usamos el ImportStatus.alreadyImportedRows para actualizar el rowCount en datatable
 	}
 
 	private int calculatePages(int totalRows, int pageSize) {
