@@ -35,18 +35,15 @@ components:
           description: Flag to resume previous import or re-import everything
           type: boolean
           default: false
-        tenantCallbackToken:
+        callback_token:
           description: Tenant token for callback
-          type: string
-        tenantId:
-          description: Tenant id for callback
           type: string
         tenantDataSourceConnectionSettings:
           { $ref: '#/components/schemas/DataSourceConnectionSettingsDTO' }
       required:
         - externalDatasourceId
         - resume
-        - tenantCallbackToken
+        - callback_token
         - tenantDataSourceConnectionSettings
     DataSourceConnectionSettingsDTO:
       type: object

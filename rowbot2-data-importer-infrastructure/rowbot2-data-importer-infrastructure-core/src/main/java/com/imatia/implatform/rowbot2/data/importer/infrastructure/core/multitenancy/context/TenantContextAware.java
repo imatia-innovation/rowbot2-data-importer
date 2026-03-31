@@ -14,8 +14,6 @@ public class TenantContextAware implements Runnable{
 
     private final String callbackToken;
 
-    private final String tenantId;
-
     private final Runnable delegate;
 
     private final MultiTenantDataSourceProvider multiTenantDataSourceProvider;
@@ -24,7 +22,7 @@ public class TenantContextAware implements Runnable{
     public void run() {
         try {
             // Propagate tenant context data at current thread
-            TenantContext.set(dataSourceConnectionSettings, callbackToken, tenantId);
+            TenantContext.set(dataSourceConnectionSettings, callbackToken);
 
             // Initialize datasource
             multiTenantDataSourceProvider.getOrCreate(dataSourceConnectionSettings);

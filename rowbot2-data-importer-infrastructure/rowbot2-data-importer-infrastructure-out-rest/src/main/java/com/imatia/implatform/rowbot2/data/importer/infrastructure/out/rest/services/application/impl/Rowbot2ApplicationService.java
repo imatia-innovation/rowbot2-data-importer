@@ -1,6 +1,8 @@
 package com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.impl;
 
-import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContext;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2ApplicationService;
 import java.io.IOException;
@@ -9,6 +11,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,26 +41,23 @@ public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
   Logger logger = LoggerFactory.getLogger(Rowbot2ApplicationService.class);
 
   @Override
-  public void updateDatasource(Datasource datasource) {
+  public void updateDatasource(Long datasourceId, String status, String errorMessage) {
     try (HttpClient client = HttpClient.newHttpClient()) {
-      String path = this.UPDATE_DATASOURCE_PATH + "/" + datasource.getId();
-
       URI uri = new URI(
           this.rowbot2ApplicationProtocol,
           null,
           this.rowbot2ApplicationHost,
           this.rowbot2ApplicationPort,
-          path,
+          this.UPDATE_DATASOURCE_PATH,
           null,
           null
       );
 
       HttpRequest request = HttpRequest.newBuilder()
           .uri(uri)
-          .header("Authorization", "Bearer " + TenantContext.get().callbackToken())
           .header("Content-Type", this.DATASOURCE_CONTENT_TYPE)
-          .header("X-Tenant", TenantContext.get().tenantId())
-          .PUT(HttpRequest.BodyPublishers.ofString(datasource.getStatus()))
+          .header("X-Tenant", this.getTenantId())
+          .PUT(HttpRequest.BodyPublishers.ofString(this.buildCallbackBody(datasourceId,status,errorMessage)))
           .build();
 
       HttpResponse<String> response = client.send(
@@ -65,8 +68,31 @@ public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
       logger.debug("Datasource update response status: {}", response.statusCode());
 
     } catch (IOException | InterruptedException | URISyntaxException e) {
-      logger.error("Error updating datasource " + datasource.getName() + ". Error: " + e.getMessage(),
+      logger.error("Error updating datasource " + datasourceId + ". Error: " + e.getMessage(),
           e);
     }
+  }
+
+  private String buildCallbackBody(Long datasourceId, String status, String errorMessage)
+      throws JsonProcessingException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map<String, Object> requestMap = new HashMap<>(Map.of("datasourceId", datasourceId,
+        "importStatus", status,
+        "callbackToken", TenantContext.get().callbackToken()));
+    if(status.equals("KO")){
+      requestMap.put("errorMessage", errorMessage);
+    }
+    return objectMapper.writeValueAsString(requestMap);
+  }
+
+  private String getTenantId() throws JsonProcessingException {
+    String[] parts = TenantContext.get().callbackToken().split("\\.");
+
+    String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]));
+
+    ObjectMapper objectMapper = new ObjectMapper();
+    Map<String, Object> payload = objectMapper.readValue(payloadJson, new TypeReference<>() {});
+
+    return (String) payload.get("tenantId");
   }
 }

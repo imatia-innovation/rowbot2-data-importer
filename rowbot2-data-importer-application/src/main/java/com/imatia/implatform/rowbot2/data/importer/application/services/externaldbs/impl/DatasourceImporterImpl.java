@@ -43,6 +43,7 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Transactional
 public class DatasourceImporterImpl implements DatasourceImporter {
 
 	private static final String IMPORT_PAGE_SIZE = "${importers.page_size}";
@@ -57,9 +58,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 
 	@Autowired
 	ImportedDbClient importedDbClient;
-
-	@Autowired
-	PermissionService permissionService;
 
 	@Autowired
 	DatasourceCRUDService datasourceCRUDService;
@@ -94,8 +92,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       }
 
       ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
-      LOGGER.info("Deleting permissions for DS {}", datasourceId);
-      permissionService.deletePermissionsOfDatasource(datasourceId);
       LOGGER.info("Deleting relations for DS {}", datasourceId);
       datarelationService.deleteByDatasourceId(datasourceId);
       LOGGER.info("Importing DS {} metadata", datasourceId);
@@ -105,28 +101,17 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       importDatatablePks(savedDatasource, externalDBImporter);
       LOGGER.info("Importing DS {} data", datasourceId);
       importOriginalData(savedDatasource, externalDBImporter);
-      LOGGER.info("Creating permissions for DS {} ", datasourceId);
-      permissionService.createPermissionsForDatasource(savedDatasource);
       LOGGER.info("Creating relations for DS {} ", datasourceId);
       importRelations(datasource, externalDBImporter);
-
-			Datasource readyDatasource = datasource.toBuilder()
-					.status(DatasourceStatus.READY.getDescription())
-					.build();
-			this.rowbot2ApplicationService.updateDatasource(readyDatasource);
-			LOGGER.info("DS with Id: {} import finished.", datasourceId);
     } catch (Throwable t) {
       LOGGER.error(t.getMessage(), t);
       //TODO: función callback para que rowbot2 actualice el estado
-			Datasource errorDatasource = Objects.requireNonNull(
-              this.datasourceCRUDService.read(datasourceId)
-                  .orElse(null))
-					.toBuilder()
-					.status(DatasourceStatus.ERROR.getDescription())
-					.build();
-      this.rowbot2ApplicationService.updateDatasource(errorDatasource);
+      this.rowbot2ApplicationService.updateDatasource(datasourceId, "KO", t.getMessage());
+			return;
     }
 
+		this.rowbot2ApplicationService.updateDatasource(datasourceId,"OK", null);
+		LOGGER.info("DS with Id: {} import finished.", datasourceId);
   }
 
 	private String checkConnection(Datasource datasource){
