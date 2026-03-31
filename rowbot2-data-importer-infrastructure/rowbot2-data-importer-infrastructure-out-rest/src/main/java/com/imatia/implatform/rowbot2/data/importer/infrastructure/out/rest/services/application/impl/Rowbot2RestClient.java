@@ -4,7 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContext;
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2ApplicationService;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
+import io.github.resilience4j.retry.annotation.Retry;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -14,14 +15,13 @@ import java.net.http.HttpResponse;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
+public class Rowbot2RestClient implements IRowbot2RestClient {
 
   private final String ROWBOT2_APPLICATION_HOST_KEY = "${rowbot2-application.server.host}";
   private final String ROWBOT2_APPLICATION_PROTOCOL_KEY = "${rowbot2-application.server.protocol}";
@@ -38,10 +38,11 @@ public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
   @Value(ROWBOT2_APPLICATION_PORT_KEY)
   private int rowbot2ApplicationPort;
 
-  Logger logger = LoggerFactory.getLogger(Rowbot2ApplicationService.class);
+  Logger logger = LoggerFactory.getLogger(Rowbot2RestClient.class);
 
   @Override
-  public void updateDatasource(Long datasourceId, String status, String errorMessage) {
+  @Retry(name = "updateDatasource", fallbackMethod = "updateDatasourceFallback")
+  public void externalDataSourceImportCallback(Long datasourceId, String status, String errorMessage) {
     try (HttpClient client = HttpClient.newHttpClient()) {
       URI uri = new URI(
           this.rowbot2ApplicationProtocol,
@@ -79,7 +80,7 @@ public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
     Map<String, Object> requestMap = new HashMap<>(Map.of("datasourceId", datasourceId,
         "importStatus", status,
         "callbackToken", TenantContext.get().callbackToken()));
-    if(status.equals("KO")){
+    if(status.equals("ERROR")){
       requestMap.put("errorMessage", errorMessage);
     }
     return objectMapper.writeValueAsString(requestMap);
@@ -94,5 +95,9 @@ public class Rowbot2ApplicationService implements IRowbot2ApplicationService {
     Map<String, Object> payload = objectMapper.readValue(payloadJson, new TypeReference<>() {});
 
     return (String) payload.get("tenantId");
+  }
+
+  public void updateDatasourceFallback(Long datasourceId, String status, String errorMessage, Exception e) {
+    logger.error("Error updating datasource {} after all retries. Error: {}", datasourceId, e.getMessage(), e);
   }
 }

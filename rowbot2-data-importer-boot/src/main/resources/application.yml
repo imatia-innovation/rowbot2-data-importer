@@ -44,3 +44,12 @@ spring:
           cte:
             use_materialized: false
           mutation_strategy: org.hibernate.query.sqm.mutation.internal.inline.InlineMutationStrategy
+resilience4j:
+  retry:
+    instances:
+      updateDatasource:
+        max-attempts: 3
+        wait-duration: 2s
+        retry-exceptions:
+          - java.io.IOException
+          - java.net.URISyntaxException

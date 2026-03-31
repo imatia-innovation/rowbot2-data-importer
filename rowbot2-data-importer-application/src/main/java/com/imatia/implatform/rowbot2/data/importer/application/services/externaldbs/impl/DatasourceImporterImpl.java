@@ -21,7 +21,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
 import com.imatia.implatform.rowbot2.data.importer.application.services.sql.postgres.PostgresDdlGenerator;
 
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2ApplicationService;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +72,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	Retrier retrier;
 
 	@Autowired
-	IRowbot2ApplicationService rowbot2ApplicationService;
+	IRowbot2RestClient rowbot2ApplicationService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
@@ -105,12 +105,11 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       importRelations(datasource, externalDBImporter);
     } catch (Throwable t) {
       LOGGER.error(t.getMessage(), t);
-      //TODO: función callback para que rowbot2 actualice el estado
-      this.rowbot2ApplicationService.updateDatasource(datasourceId, "KO", t.getMessage());
+      this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", t.getMessage());
 			return;
     }
 
-		this.rowbot2ApplicationService.updateDatasource(datasourceId,"OK", null);
+		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
 		LOGGER.info("DS with Id: {} import finished.", datasourceId);
   }
 
