@@ -6,6 +6,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.sql.post
 import org.postgresql.ds.PGSimpleDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -106,7 +107,9 @@ public class PostgresImporter extends AbstractJDBCImporter {
 				ResultSet rs = statement.executeQuery()
 		){
 			while (rs.next()){
-				tableNames.add(rs.getString(TABLE_NAME_ALIAS));
+				String tableName = rs.getString(TABLE_NAME_ALIAS);
+				LOGGER.debug("Found table with name: {}", tableName);
+				addFilteredTables(tableNames, tablesWhiteList, tableName);
 			}
 		} catch (SQLException e) {
 			throw new RowbotDBReadException("There was a problem trying to get the tables of the datasource: " + datasource.getName(), e);
