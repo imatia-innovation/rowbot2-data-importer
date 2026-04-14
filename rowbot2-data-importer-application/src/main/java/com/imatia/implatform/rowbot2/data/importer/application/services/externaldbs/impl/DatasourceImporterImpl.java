@@ -81,7 +81,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 
     LOGGER.info("{} Datasource with Id: {}", resumingImport ? "Resuming" : "Importing",
         datasourceId);
-    Datasource savedDatasource = null;
     try {
       Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
 
@@ -95,7 +94,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       LOGGER.info("Deleting relations for DS {}", datasourceId);
       datarelationService.deleteByDatasourceId(datasourceId);
       LOGGER.info("Importing DS {} metadata", datasourceId);
-      savedDatasource = importDatasourceMetadata(datasource, externalDBImporter,
+			Datasource savedDatasource = importDatasourceMetadata(datasource, externalDBImporter,
           resumingImport);
       LOGGER.info("Importing DS {} primary Keys", datasourceId);
       importDatatablePks(savedDatasource, externalDBImporter);
