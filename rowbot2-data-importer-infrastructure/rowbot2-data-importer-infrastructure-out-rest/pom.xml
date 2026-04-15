@@ -23,12 +23,21 @@
             <artifactId>rowbot2-data-importer-domain</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.imatia.implatform.rowbot2</groupId>
+            <artifactId>rowbot2-data-importer-infrastructure-core</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.data</groupId>
             <artifactId>spring-data-commons</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.3.0</version>
         </dependency>
     </dependencies>
 

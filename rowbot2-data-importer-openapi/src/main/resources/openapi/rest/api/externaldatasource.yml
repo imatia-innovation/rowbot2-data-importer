@@ -35,7 +35,7 @@ components:
           description: Flag to resume previous import or re-import everything
           type: boolean
           default: false
-        tenantCallbackToken:
+        callbackToken:
           description: Tenant token for callback
           type: string
         tenantDataSourceConnectionSettings:
@@ -43,7 +43,7 @@ components:
       required:
         - externalDatasourceId
         - resume
-        - tenantCallbackToken
+        - callbackToken
         - tenantDataSourceConnectionSettings
     DataSourceConnectionSettingsDTO:
       type: object
