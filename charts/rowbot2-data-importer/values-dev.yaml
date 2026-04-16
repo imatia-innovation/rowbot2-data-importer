@@ -89,7 +89,7 @@ ingress:
     cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53
   host: databench-importer.dev.imatia.cloud
   tls:
-    #secretName: rowbot2-tls
+    secretName: rowbot2-data-importer-tls
     enabled: true
 
 # tenant management. The application is a tenant manager.  see deployment.yaml
