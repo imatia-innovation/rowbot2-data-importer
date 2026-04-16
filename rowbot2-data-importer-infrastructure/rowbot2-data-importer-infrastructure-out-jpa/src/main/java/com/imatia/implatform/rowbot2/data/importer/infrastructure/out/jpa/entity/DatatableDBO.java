@@ -26,4 +26,6 @@ public class DatatableDBO extends BaseDatabaseEntity {
 	@ManyToMany(mappedBy = "tables", cascade = {CascadeType.DETACH})
 	private Set<EntityDBO> entities;
 	private Long pkDatacolumnId;
+	@Column(name = "rowcount")
+	private Long rowCount;
 }
