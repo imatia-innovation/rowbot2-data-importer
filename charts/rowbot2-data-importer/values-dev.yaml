@@ -154,3 +154,8 @@ retries:
     max_attempts: 5
     ms_to_retry: 30000
 
+rowbot2Application:
+  server:
+    protocol: http
+    host: localhost
+    port: 8080
