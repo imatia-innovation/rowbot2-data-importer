@@ -82,16 +82,15 @@ service:
   externalPort: 80
   internalPort: 8080 # must match your application port
 ingress:
-  enabled: false
-    # annotations:
-    #  kubernetes.io/ingress.class: nginx   ## comment to deploy when not in aws clusters
-    #  kubernetes.io/tls-acme: "true" ## comment to deploy when not in aws clusters
-    #  cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53 # use cert-manager-letsencrypt-staging-route53 for testing environments
-    # host: rowbot2-data-importer.dev.imatia.cloud # restricted to *dev.imatia.com by default in development clusters
-    #host: rowbot2-data-importer.cloud.imatia.com # uncomment this when not in AWS clusters
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    kubernetes.io/tls-acme: "true"
+    cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53
+  host: databench-importer.dev.imatia.cloud
   tls:
-    #secretName: rowbot2-data-importer-tls # only customize if needed to avoid name conflicts
-    enabled: false
+    #secretName: rowbot2-tls
+    enabled: true
 
 # tenant management. The application is a tenant manager.  see deployment.yaml
 tenantManagement:
