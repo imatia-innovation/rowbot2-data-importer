@@ -48,7 +48,7 @@ resources:
   limits:
     memory: 4096Mi
   requests:
-    cpu: 50m
+    cpu: 1000m
     memory: 4096Mi
 
 jwt:
