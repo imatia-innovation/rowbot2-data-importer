@@ -5,6 +5,10 @@ environment:
 logging:
   level:
     root: INFO
+    org.postgresql.core: DEBUG
+    org.postgresql.jdbc: DEBUG
+    com.zaxxer.hikari: DEBUG
+    org.springframework.jdbc: DEBUG
 multitenancy:
   datasource:
     minimum-idle: 0
