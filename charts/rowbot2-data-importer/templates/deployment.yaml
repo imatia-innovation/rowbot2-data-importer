@@ -179,6 +179,12 @@ spec:
             value: "{{ .Values.retries.default.max_attempts }}"
           - name: RETRIES_DEFAULT_MS_TO_RETRY
             value: "{{ .Values.retries.default.ms_to_retry }}"
+          - name: ROWBOT2_APPLICATION_SERVER_PROTOCOL
+            value: "{{ .Values.rowbot2Application.server.protocol }}"
+          - name: ROWBOT2_APPLICATION_SERVER_HOST
+            value: "{{ .Values.rowbot2Application.server.host }}.{{ .Values.cluster.namespace }}.svc.cluster.local"
+          - name: ROWBOT2_APPLICATION_SERVER_PORT
+            value: "{{ .Values.rowbot2Application.server.port }}"
           ports:
           - name: http
             containerPort: {{ .Values.service.internalPort }}

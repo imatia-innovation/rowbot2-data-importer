@@ -1,14 +1,26 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers;
 
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.exception.RowbotDBReadException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.application.services.sql.postgres.util.PostgresqlUtils;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class PostgresImporter extends AbstractJDBCImporter {
-	private final String DEFAULT_SCHEMA = "public";
+	private static final String DEFAULT_SCHEMA = "public";
+	private static final String TABLE_NAME_ALIAS = "tableName";
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(PostgresImporter.class);
 	public PostgresImporter(Datasource datasource) {
 		super(datasource);
 	}
@@ -57,7 +69,8 @@ public class PostgresImporter extends AbstractJDBCImporter {
 				"INNER JOIN pg_catalog.pg_class cls ON cls.oid = con.conrelid " +
 				"INNER JOIN pg_catalog.pg_namespace nsp ON nsp.oid = cls.relnamespace " +
 				"INNER JOIN pg_catalog.pg_attribute attr on cls.oid = attr.attrelid and attr.attnum = ANY (con.conkey) " +
-				"where con.contype ='p' and nsp.nspname = '"+ this.getSchema() +"'";
+				"where con.contype ='p' and nsp.nspname = '"+ this.getSchema() +"'" +
+				"AND cls.relispartition = false ";
 	}
 
 	protected String importedDataTypeToInternalDataType(String externalDataType) {
@@ -82,7 +95,40 @@ public class PostgresImporter extends AbstractJDBCImporter {
 				"JOIN pg_namespace n ON n.oid = c.relnamespace " +
 				"WHERE UPPER(n.nspname) = UPPER('" + schema + "') " +
 				"AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
-				"AND c.relkind = 'r';";
+				"AND c.relkind IN ('r', 'p');";
 	}
 
+	@Override
+	public List<String> getTableNames(List<String> tablesWhiteList) {
+		List<String> tableNames = new ArrayList<>();
+
+		try(Connection connection = sqlDataSource.getConnection();
+				PreparedStatement statement = getTableNamesQueryPreparedStatement(connection);
+				ResultSet rs = statement.executeQuery()
+		){
+			while (rs.next()){
+				String tableName = rs.getString(TABLE_NAME_ALIAS);
+				LOGGER.debug("Found table with name: {}", tableName);
+				addFilteredTables(tableNames, tablesWhiteList, tableName);
+			}
+		} catch (SQLException e) {
+			throw new RowbotDBReadException("There was a problem trying to get the tables of the datasource: " + datasource.getName(), e);
+		}
+		return tableNames;
+	}
+
+	private PreparedStatement getTableNamesQueryPreparedStatement(Connection connection) throws SQLException {
+		PreparedStatement statement = connection.prepareStatement(getTableNamesQuery());
+		statement.setString(1, getSchema());
+		return statement;
+	}
+
+	private String getTableNamesQuery(){
+		return "SELECT relname AS tableName " +
+				"FROM pg_catalog.pg_class c " +
+				"INNER JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace " +
+				"WHERE c.relkind in ('r', 'p') " +
+				"AND c.relispartition = false " +
+				"AND n.nspname = ?";
+	}
 }

@@ -66,13 +66,17 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
             while (tablasResultSet.next()) {
                 String tableName = tablasResultSet.getString("TABLE_NAME");
                 LOGGER.debug("Found table with name: {}", tableName);
-                if(CollectionUtils.isEmpty(tablesWhiteList) ||
-                    tablesWhiteList.contains(tableName)){
-                        tableNames.add(tableName);
-                }
+                addFilteredTables(tablesWhiteList, tableNames, tableName);
             }
         }
         return tableNames;
+    }
+
+    protected void addFilteredTables(List<String> filteredTableNames, List<String> tablesWhiteList, String tableName) {
+        if(CollectionUtils.isEmpty(tablesWhiteList) ||
+            tablesWhiteList.contains(tableName)){
+                filteredTableNames.add(tableName);
+        }
     }
 
     public List<String> getColumnsNames(String tableName) throws SQLException{

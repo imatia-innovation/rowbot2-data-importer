@@ -15,3 +15,8 @@ management:
   endpoints:
     web:
       base-path: /management
+rowbot2-application:
+  server:
+    protocol: ${ROWBOT2_APPLICATION_SERVER_PROTOCOL}
+    host: ${ROWBOT2_APPLICATION_SERVER_HOST}
+    port: ${ROWBOT2_APPLICATION_SERVER_PORT}

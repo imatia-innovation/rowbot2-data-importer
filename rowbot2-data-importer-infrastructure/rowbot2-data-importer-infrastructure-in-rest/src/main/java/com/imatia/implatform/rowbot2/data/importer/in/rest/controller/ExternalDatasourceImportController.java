@@ -21,7 +21,7 @@ public class ExternalDatasourceImportController implements ExternalDatasourceImp
         // returns immediately (async)
         importProcessUseCase.handle(importRequestDTO.getExternalDatasourceId(),
                 mapper.dtoToVO(importRequestDTO.getTenantDataSourceConnectionSettings()),
-                importRequestDTO.getTenantCallbackToken(), importRequestDTO.getResume());
+                importRequestDTO.getCallbackToken(), importRequestDTO.getResume());
         return ResponseEntity.ok().build();
     }
 }
