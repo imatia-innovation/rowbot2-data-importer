@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25
+FROM eclipse-temurin:21
 
 ENV PORT 8080
 ENV CLASSPATH /opt/lib
