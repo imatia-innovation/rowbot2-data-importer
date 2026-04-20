@@ -55,8 +55,6 @@ spec:
           - name: JVM_OPTIONS
             value: {{ .Values.jvmOptions }}
         {{- end }}
-          - name: JAVA_TOOL_OPTIONS
-            vale: "-Djdk.tls.client.protocols=TLSv1.2"
           - name: VERSION
             value: {{ .Chart.Version }}
 {{- range $pkey, $pval := .Values.env }}

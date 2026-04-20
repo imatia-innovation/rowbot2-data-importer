@@ -23,15 +23,9 @@ public class MultiTenantDataSourceProvider {
 
         return cache.computeIfAbsent(cs.hashCode(), k -> {
 
-            // Force driver load
-            try {
-                Class.forName("org.postgresql.Driver");
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-
             HikariDataSource ds = new HikariDataSource();
 
+            ds.setDriverClassName("org.postgresql.Driver");
             ds.setJdbcUrl(cs.url());
             ds.setUsername(cs.username());
             ds.setPassword(cs.password());
