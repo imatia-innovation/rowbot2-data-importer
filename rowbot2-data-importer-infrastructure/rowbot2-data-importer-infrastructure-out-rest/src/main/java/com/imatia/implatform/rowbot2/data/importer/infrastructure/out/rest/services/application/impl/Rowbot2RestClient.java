@@ -41,7 +41,7 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   Logger logger = LoggerFactory.getLogger(Rowbot2RestClient.class);
 
   @Override
-  @Retry(name = "updateDatasource", fallbackMethod = "updateDatasourceFallback")
+  @Retry(name = "externalDataSourceImportCallback", fallbackMethod = "externalDataSourceImportCallbackFallback")
   public void externalDataSourceImportCallback(Long datasourceId, String status, String errorMessage) {
     try (HttpClient client = HttpClient.newHttpClient()) {
       URI uri = new URI(
@@ -97,7 +97,7 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
     return (String) payload.get("tenantId");
   }
 
-  public void updateDatasourceFallback(Long datasourceId, String status, String errorMessage, Exception e) {
+  public void externalDataSourceImportCallbackFallback(Long datasourceId, String status, String errorMessage, Exception e) {
     logger.error("Error updating datasource {} after all retries. Error: {}", datasourceId, e.getMessage(), e);
   }
 }

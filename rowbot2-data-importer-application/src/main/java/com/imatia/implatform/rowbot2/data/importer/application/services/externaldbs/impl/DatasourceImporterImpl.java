@@ -109,6 +109,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
     }
 
 		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
+		this.datasourceCRUDService.updateLastImportedPage(datasourceId, null,null, null);
 		LOGGER.info("DS with Id: {} import finished.", datasourceId);
   }
 
