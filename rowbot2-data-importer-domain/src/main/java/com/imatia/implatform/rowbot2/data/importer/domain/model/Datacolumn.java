@@ -15,4 +15,5 @@ import lombok.extern.jackson.Jacksonized;
 public class Datacolumn extends BaseDomainObject {
 	String name;
 	Long datatableId;
+	String sampleData;
 }
