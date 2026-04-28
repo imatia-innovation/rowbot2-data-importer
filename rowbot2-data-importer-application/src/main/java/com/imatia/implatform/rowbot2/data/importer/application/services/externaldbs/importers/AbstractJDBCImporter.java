@@ -66,7 +66,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
             while (tablasResultSet.next()) {
                 String tableName = tablasResultSet.getString("TABLE_NAME");
                 LOGGER.debug("Found table with name: {}", tableName);
-                addFilteredTables(tablesWhiteList, tableNames, tableName);
+                addFilteredTables(tableNames, tablesWhiteList, tableName);
             }
         }
         return tableNames;
