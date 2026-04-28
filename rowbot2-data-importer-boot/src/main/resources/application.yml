@@ -5,6 +5,7 @@ environment:
 logging:
   level:
     root: INFO
+    com.imatia: DEBUG
 multitenancy:
   datasource:
     minimum-idle: 0
