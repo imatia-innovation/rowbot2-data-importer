@@ -20,4 +20,5 @@ public class DatacolumnDBO extends BaseDatabaseEntity {
 	private Long datatableId;
 	@ManyToMany(mappedBy = "datacolumns")
 	private Set<AttributeDBO> attributes;
+	private String sampleData;
 }
