@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Future;
 
 @Component
 @AllArgsConstructor
@@ -23,25 +24,40 @@ public class ImportProcessUseCase {
 
     private MultiTenantDataSourceProvider multiTenantDataSourceProvider;
 
-    private final Map<Long, CompletableFuture<Void>> currentlyImportingDatasources = new ConcurrentHashMap<>();
+    private final Map<String, Map<Long, CompletableFuture<Void>>> tenantsImportingDatasources = new ConcurrentHashMap<>();
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportProcessUseCase.class);
 
-    public void handle(Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings,
+    public void handle(String tenantId, Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings,
                        String callbackToken, boolean resume) {
+        Map<Long, CompletableFuture<Void>> tenantImports = getTenantImports(tenantId);
 
-        if (!currentlyImportingDatasources.containsKey(datasourceId)) {
-
-            CompletableFuture<Void> future = CompletableFuture.runAsync(new TenantContextAware(dataSourceConnectionSettings,
-                    callbackToken, () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
-
-            currentlyImportingDatasources.put(datasourceId, future);
-            future.whenComplete((result, ex) -> currentlyImportingDatasources.remove(datasourceId));
-        }
-        else{
-            LOGGER.warn("DS with Id: {} is already being imported.",datasourceId);
+        if (!isAlreadyBeingImported(tenantImports, datasourceId)) {
+            startImport(tenantImports, tenantId, datasourceId, dataSourceConnectionSettings, callbackToken, resume);
+        } else {
+            LOGGER.warn("Import process for DS({}) is already running for tenant {}", datasourceId, tenantId);
         }
 
+    }
+
+    private Map<Long, CompletableFuture<Void>> getTenantImports(String tenantId) {
+        return tenantsImportingDatasources.computeIfAbsent(tenantId, id -> new ConcurrentHashMap<>());
+    }
+
+    private boolean isAlreadyBeingImported(Map<Long, CompletableFuture<Void>> tenantImports, Long datasourceId) {
+        return tenantImports.get(datasourceId) != null && tenantImports.get(datasourceId).state() == Future.State.RUNNING;
+    }
+
+    private void startImport(Map<Long, CompletableFuture<Void>> tenantImports, String tenantId, Long datasourceId,
+                             DataSourceConnectionSettings dataSourceConnectionSettings, String callbackToken, boolean resume) {
+        CompletableFuture<Void> importTask = CompletableFuture.runAsync(
+                new TenantContextAware(tenantId, dataSourceConnectionSettings,callbackToken,
+                        () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
+        tenantImports.put(datasourceId, importTask);
+
+        importTask.whenComplete((result, throwable) -> {
+            tenantImports.remove(datasourceId);
+        });
     }
 
 }

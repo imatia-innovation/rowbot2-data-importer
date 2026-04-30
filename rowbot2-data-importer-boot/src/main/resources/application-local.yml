@@ -1,6 +1,8 @@
 environment:
   profile: local
 logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS XXX} %-5level [%X{tenantId}] %logger{36} - %msg%n"
   level:
     com.imatia: DEBUG
     org.springframework.boot.autoconfigure: INFO
@@ -12,6 +14,12 @@ retries:
     ms_to_retry: 3
 server:
   port: 8087
+spring:
+  datasource:
+    hikari:
+      connection-timeout: 300
+      validation-timeout: 300
+      idle-timeout: 300
 rowbot2-application:
   server:
     protocol: http
