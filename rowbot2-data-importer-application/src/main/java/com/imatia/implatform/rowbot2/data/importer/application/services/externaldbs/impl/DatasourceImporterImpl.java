@@ -76,14 +76,11 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	@Autowired
 	Retrier retrier;
 
-	@Autowired
-	IRowbot2RestClient rowbot2ApplicationService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
 	@Override
 	public void importDatasource(final Long datasourceId, boolean resumingImport) {
-
     LOGGER.info("{} Datasource with Id: {}", resumingImport ? "Resuming" : "Importing",
         datasourceId);
     try {
@@ -109,12 +106,8 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       importRelations(datasource, externalDBImporter);
     } catch (Throwable t) {
       LOGGER.error(t.getMessage(), t);
-      this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", t.getMessage());
-			return;
+	  throw t;
     }
-
-		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
-		LOGGER.info("DS with Id: {} import finished.", datasourceId);
   }
 
 	private String checkConnection(Datasource datasource){
