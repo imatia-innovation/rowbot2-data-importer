@@ -6,9 +6,11 @@ import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitena
 
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceConnectionSettings;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.MultiTenantDataSourceProvider;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -18,6 +20,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 @AllArgsConstructor
 public class ImportProcessUseCase {
+    @Autowired
+    IRowbot2RestClient rowbot2ApplicationService;
+
 
     private DatasourceImporter datasourceImporter;
 
@@ -33,7 +38,15 @@ public class ImportProcessUseCase {
         if (!currentlyImportingDatasources.containsKey(datasourceId)) {
 
             CompletableFuture<Void> future = CompletableFuture.runAsync(new TenantContextAware(dataSourceConnectionSettings,
-                    callbackToken, () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
+                    callbackToken, () -> {
+                try{
+                    datasourceImporter.importDatasource(datasourceId, resume);
+                    rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
+                    LOGGER.info("DS with Id: {} import finished.", datasourceId);
+                }catch(Throwable t){
+                    rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", t.getMessage());
+                }
+            }, multiTenantDataSourceProvider));
 
             currentlyImportingDatasources.put(datasourceId, future);
             future.whenComplete((result, ex) -> currentlyImportingDatasources.remove(datasourceId));
