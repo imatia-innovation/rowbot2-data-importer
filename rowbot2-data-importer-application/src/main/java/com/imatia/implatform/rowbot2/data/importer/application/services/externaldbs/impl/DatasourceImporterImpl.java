@@ -23,6 +23,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.sql.post
 
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +48,10 @@ import java.util.stream.Stream;
 public class DatasourceImporterImpl implements DatasourceImporter {
 
 	private static final String IMPORT_PAGE_SIZE = "${importers.page_size}";
+
+	private final int MAX_SAMPLES_PER_COLUMN = 10;
+
+	private final int MAX_SAMPLE_LENGTH = 15;
 	@Value(IMPORT_PAGE_SIZE)
 	protected int PAGE_SIZE;
 
@@ -71,14 +76,11 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	@Autowired
 	Retrier retrier;
 
-	@Autowired
-	IRowbot2RestClient rowbot2ApplicationService;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
 	@Override
 	public void importDatasource(final Long datasourceId, boolean resumingImport) {
-
     LOGGER.info("{} Datasource with Id: {}", resumingImport ? "Resuming" : "Importing",
         datasourceId);
     try {
@@ -104,8 +106,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       importRelations(datasource, externalDBImporter);
     } catch (Throwable t) {
       LOGGER.error(t.getMessage(), t);
-      this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", t.getMessage());
-			return;
+	  throw t;
     }
 
 		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
@@ -248,7 +249,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 		LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
 		datasource.getTables().stream()
 				.sorted(Comparator.comparing(Datatable::getOriginalTableName))
-				.filter(datatable-> !datatable.getOriginalTableName().equals("fact_prem_trans") &&
+				.filter(datatable->
 						(datasource.getLastImportedTableName()==null ||
 								datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
 				.forEach(datatable ->{
@@ -276,7 +277,9 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 					LOGGER.debug("DS({}): {}, Table: {} ({} of {}), Page {} of {} - inserting...",
 							datasource.getId(), datasource.getName(), datatable.getOriginalTableName(),
 							datatableIndex, totalDatatables, importStatus.getNextPageIndex(), totalPages);
-
+					if(isFirstPageOfTable(importStatus)){
+						saveSampleData(dbReadChunk, externalTableDescription);
+					}
 					processPageImport(dbReadChunk, externalTableDescription.getColumns(), datatable);
 
 					String statusDescription = String.format("Importing table %s (%d of %d), page %d of %d",
@@ -289,6 +292,10 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 				}
 			}
 		});
+	}
+
+	private boolean isFirstPageOfTable(ImportStatus importStatus) {
+		return importStatus.getNextPageIndex() == 0;
 	}
 
 	private int calculatePages(int totalRows, int pageSize) {
@@ -320,5 +327,28 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 				datatable.getName(),
 				columnDescriptions);
         LOGGER.debug("Page inserted.");
+	}
+
+	private void saveSampleData(DbReadChunk<Map<String,?>> dbReadChunk, ExternalTableDescription externalTableDescription) {
+		externalTableDescription.getColumns().stream()
+				.forEach(columnDescription ->
+						datacolumnService.updateSample(
+								externalTableDescription.getDatatableId(),
+								columnDescription.getName(),
+								extractColumnSample(dbReadChunk, columnDescription.getName())));
+	}
+
+	private String extractColumnSample(DbReadChunk<Map<String,?>> dbReadChunk, String columnName) {
+		return dbReadChunk.getItems().stream()
+				.limit(MAX_SAMPLES_PER_COLUMN)
+				.map(row-> row.get(columnName))
+				.map(value -> value == null?
+						Strings.EMPTY:
+						value)
+				.map(Object::toString)
+				.map(stringifiedColumnValue -> stringifiedColumnValue.length() > MAX_SAMPLE_LENGTH ?
+						stringifiedColumnValue.substring(0, MAX_SAMPLE_LENGTH) + "..." :
+						stringifiedColumnValue)
+				.collect(Collectors.joining(", "));
 	}
 }
