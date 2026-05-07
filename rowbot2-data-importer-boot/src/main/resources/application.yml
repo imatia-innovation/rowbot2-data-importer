@@ -48,7 +48,7 @@ spring:
 resilience4j:
   retry:
     instances:
-      updateDatasource:
+      externalDataSourceImportCallback:
         max-attempts: 3
         wait-duration: 2s
         retry-exceptions:
