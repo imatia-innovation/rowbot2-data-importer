@@ -2,7 +2,7 @@ environment:
   profile: staging
 logging:
   level:
-    com.imatia: INFO
+    com.imatia: DEBUG
     org.springframework.boot.autoconfigure: INFO
 management:
   security:

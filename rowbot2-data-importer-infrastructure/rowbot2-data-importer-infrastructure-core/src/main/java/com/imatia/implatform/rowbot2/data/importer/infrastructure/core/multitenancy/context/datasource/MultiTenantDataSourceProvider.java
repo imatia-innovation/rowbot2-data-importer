@@ -22,8 +22,10 @@ public class MultiTenantDataSourceProvider {
     public DataSource getOrCreate(DataSourceConnectionSettings cs) {
 
         return cache.computeIfAbsent(cs.hashCode(), k -> {
+
             HikariDataSource ds = new HikariDataSource();
 
+            ds.setDriverClassName("org.postgresql.Driver");
             ds.setJdbcUrl(cs.url());
             ds.setUsername(cs.username());
             ds.setPassword(cs.password());

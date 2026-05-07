@@ -10,6 +10,7 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datatable;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalColumnDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalTableDescription;
+import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -83,6 +85,11 @@ public class DataImporter {
         });
     }
 
+
+    private boolean isFirstPageOfTable(ImportStatus importStatus) {
+        return importStatus.getNextPageIndex() == 0;
+    }
+
     private ImportStatus initializeImportStatus(Datasource datasource, Datatable datatable, ExternalTableDescription externalTableDescription, Integer pageSize) {
         boolean isNewTable = datasource.getLastImportedTableName() == null
                 || !datatable.getOriginalTableName().equals(datasource.getLastImportedTableName());
@@ -113,4 +120,6 @@ public class DataImporter {
         }
         return pages;
     }
+
+
 }

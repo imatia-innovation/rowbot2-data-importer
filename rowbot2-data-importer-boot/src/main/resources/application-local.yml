@@ -8,6 +8,9 @@ logging:
     org.springframework.boot.autoconfigure: INFO
 importers:
   page_size: 10000
+  metadata:
+    samplesPerColumn: 5
+    sampleLength: 15
 retries:
   default:
     max_attempts: 5

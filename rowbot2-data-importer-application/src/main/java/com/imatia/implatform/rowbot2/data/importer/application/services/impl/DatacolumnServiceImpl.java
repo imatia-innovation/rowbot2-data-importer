@@ -7,7 +7,6 @@ import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.entity
 
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.jpa.repository.DatacolumnRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -20,5 +19,10 @@ public class DatacolumnServiceImpl extends AbstractCRUDServiceImpl<Datacolumn, D
 	public Optional<Datacolumn> findByDatatableIdAndName(Long datatableId, String name){
 		return repo.findByDatatableIdAndName(datatableId, name)
 				.map(this::fromDBO);
+	}
+
+	@Override
+	public void updateSample(Long datatableId, String datacolumnName, String columnSample) {
+		repo.updateDatacolumnSample(datatableId, datacolumnName, columnSample);
 	}
 }
