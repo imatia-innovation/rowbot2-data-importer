@@ -27,7 +27,7 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   private final String ROWBOT2_APPLICATION_PROTOCOL_KEY = "${rowbot2-application.server.protocol}";
   private final String ROWBOT2_APPLICATION_PORT_KEY = "${rowbot2-application.server.port}";
   private final String UPDATE_DATASOURCE_PATH = "/datasource/importer/callbackExternalDatasourceImport";
-  private final String UPDATE_DATASOURCE_STATUS_PATH = "ds/updateStatus/";
+  private final String UPDATE_DATASOURCE_STATUS_PATH = "/ds/updateStatus";
   private final String DATASOURCE_CONTENT_TYPE = "application/json;charset=UTF-8";
 
   @Value(ROWBOT2_APPLICATION_HOST_KEY)

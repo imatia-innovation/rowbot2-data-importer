@@ -4,7 +4,14 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS XXX} %-5level [%X{tenantId}] %logger{36} - %msg%n"
   level:
-    com.imatia: DEBUG
+    com:
+      imatia:
+        implatform:
+          rowbot2:
+            api:
+              core:
+                services:
+                  externalccc: INFO
     org.springframework.boot.autoconfigure: INFO
 importers:
   page_size: 10000

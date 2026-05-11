@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
 import java.sql.SQLException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -128,13 +129,13 @@ public class MetadataImporter {
         return tableDataStream
                 .peek(dbReadChunk -> LOGGER.debug("Reading sample data chunk for table {} with {} rows", tableName, dbReadChunk.getItems().size()))
                 .findFirst()
-                .orElseThrow(() -> new RowbotDBReadException("Error reading sample data for table " + tableName + ": no data read"));
+                .orElse(new DbReadChunk<>(Collections.EMPTY_LIST, 0));
     }
 
     private String readChunkToString(DbReadChunk<Map<String,?>> dbReadChunk, String columnName) {
         return dbReadChunk.getItems().stream()
                 .limit(MAX_SAMPLES_PER_COLUMN)
-                .map(row-> row.get(columnName))
+                .map(row-> row == null ? null : row.get(columnName))
                 .map(value -> value == null?
                         Strings.EMPTY:
                         value)
