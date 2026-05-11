@@ -68,7 +68,6 @@ public class JdbcPageIterator implements Iterator<DbReadChunk<Map<String, ?>>>, 
 
 		try {
 			int read = 0;
-			LOGGER.debug("Cursor Page {} reading.", infoPageIndexInDb);
 			do {
 				Map<String, Object> row =
 						new LinkedHashMap<>(columnCount * 2);
@@ -78,8 +77,6 @@ public class JdbcPageIterator implements Iterator<DbReadChunk<Map<String, ?>>>, 
 				content.add(row);
 				read++;
 			} while (read < pageSize && rs.next());
-
-			LOGGER.debug("Cursor Page {} read.", infoPageIndexInDb);
 			if (content.isEmpty()) {
 				close();
 				throw new NoSuchElementException();

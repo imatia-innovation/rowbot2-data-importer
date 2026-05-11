@@ -1,354 +1,95 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.impl;
 
 import com.imatia.implatform.rowbot2.data.importer.application.services.*;
-import com.imatia.implatform.rowbot2.data.importer.application.services.retry.Retrier;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.Datacolumn;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.Datatable;
+import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdNotExistentOnDBException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RowbotRuntimeException;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalColumnDescription;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalPrimaryKeyDescription;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalRelation;
-import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalTableDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.enums.DatasourceStatus;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.DatasourceImporter;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ExternalDBImporterFactory;
-import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.exception.RowbotDBReadException;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers.ExternalDBImporter;
-import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.DbReadChunk;
-import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.ImportProcessManager;
-import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.ImportStatus;
-import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
-import com.imatia.implatform.rowbot2.data.importer.application.services.sql.postgres.PostgresDdlGenerator;
 
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.RequiredArgsConstructor;
-import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
-
-import java.sql.SQLException;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class DatasourceImporterImpl implements DatasourceImporter {
 
-	private static final String IMPORT_PAGE_SIZE = "${importers.page_size}";
+    @Autowired
+    DataImporter dataImporter;
 
-	private final int MAX_SAMPLES_PER_COLUMN = 10;
+    @Autowired
+    RelationsImporter relationsImporter;
 
-	private final int MAX_SAMPLE_LENGTH = 15;
-	@Value(IMPORT_PAGE_SIZE)
-	protected int PAGE_SIZE;
+    @Autowired
+    PrimaryKeysImporter primaryKeysImporter;
 
-	@Autowired
-	DatatableService datatableService;
+    @Autowired
+    MetadataImporter metadataImporter;
 
-	@Autowired
-	ExternalDBImporterFactory externalDBImporterFactory;
+    @Autowired
+    ExternalDBImporterFactory externalDBImporterFactory;
 
-	@Autowired
-	ImportedDbClient importedDbClient;
+    @Autowired
+    DatasourceCRUDService datasourceCRUDService;
 
-	@Autowired
-	DatasourceCRUDService datasourceCRUDService;
+    @Autowired
+    IRowbot2RestClient rowbot2ApplicationService;
 
-	@Autowired
-	DatarelationService datarelationService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
-	@Autowired
-	DatacolumnService datacolumnService;
+    @Override
+    public void importDatasource(final Long datasourceId, boolean resumingImport) {
 
-	@Autowired
-	Retrier retrier;
+        LOGGER.info("{} Datasource with Id: {}", resumingImport ? "Resuming" : "Importing", datasourceId);
 
+        try {
+            Datasource datasource = datasourceCRUDService.read(datasourceId)
+                    .orElseThrow(() -> new IdNotExistentOnDBException("Datasource with id " + datasourceId + " does not exist on DB"));
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Checking connection", null);
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
+            String connectionError = checkConnection(datasource);
+            if (StringUtils.hasText(connectionError)) {
+                throw new RowbotRuntimeException(
+                        "There was an error trying to connect to the datasource, Error: " + connectionError);
+            }
 
-	@Override
-	public void importDatasource(final Long datasourceId, boolean resumingImport) {
-    LOGGER.info("{} Datasource with Id: {}", resumingImport ? "Resuming" : "Importing",
-        datasourceId);
-    try {
-      Datasource datasource = buildDatasourceToImport(datasourceId, resumingImport);
-
-      String connectionError = checkConnection(datasource);
-      if (StringUtils.hasText(connectionError)) {
-        throw new RowbotRuntimeException(
-            "There was an error trying to connect to the datasource, Error: " + connectionError);
-      }
-
-      ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
-      LOGGER.info("Deleting relations for DS {}", datasourceId);
-      datarelationService.deleteByDatasourceId(datasourceId);
-      LOGGER.info("Importing DS {} metadata", datasourceId);
-			Datasource savedDatasource = importDatasourceMetadata(datasource, externalDBImporter,
-          resumingImport);
-      LOGGER.info("Importing DS {} primary Keys", datasourceId);
-      importDatatablePks(savedDatasource, externalDBImporter);
-      LOGGER.info("Importing DS {} data", datasourceId);
-      importOriginalData(savedDatasource, externalDBImporter);
-      LOGGER.info("Creating relations for DS {} ", datasourceId);
-      importRelations(datasource, externalDBImporter);
-    } catch (Throwable t) {
-      LOGGER.error(t.getMessage(), t);
-	  throw t;
+            ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
+            LOGGER.info("Deleting relations for DS {}", datasourceId);
+            relationsImporter.removeRelationsOfDatasource(datasourceId);
+            LOGGER.info("Importing DS {} metadata", datasourceId);
+            Datasource savedDatasource = metadataImporter.importDatasourceMetadata(datasource, externalDBImporter,
+                    resumingImport);
+            LOGGER.info("Importing DS {} primary Keys", datasourceId);
+            primaryKeysImporter.importDatatablePks(savedDatasource, externalDBImporter);
+            LOGGER.info("Importing DS {} data", datasourceId);
+            dataImporter.importOriginalData(savedDatasource, externalDBImporter);
+            LOGGER.info("Creating relations for DS {} ", datasourceId);
+            relationsImporter.importRelations(datasource, externalDBImporter);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
+            this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", e.getMessage());
+            return;
+        }
+        LOGGER.info("DS with id: {} data read completed.", datasourceId);
+        this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "OK", null);
+        LOGGER.info("DS with Id: {} import finished.", datasourceId);
     }
 
-		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
-		this.datasourceCRUDService.updateLastImportedPage(datasourceId, null,null, null);
-		LOGGER.info("DS with Id: {} import finished.", datasourceId);
-  }
+    private String checkConnection(Datasource datasource) {
+        return externalDBImporterFactory.create(datasource).checkConnection();
+    }
 
-	private String checkConnection(Datasource datasource){
-		return externalDBImporterFactory.create(datasource).checkConnection();
-	}
+    private void updateDatasourceStatus(Long datasourceId, DatasourceStatus status, String statusDetail, Integer lastImportedPage) {
+        rowbot2ApplicationService.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
+    }
 
-	private Datasource buildDatasourceToImport(Long datasourceId, boolean resumingImport) {
-		Datasource datasource = datasourceCRUDService.updateStatus(datasourceId, DatasourceStatus.READING.getDescription());
-		if(!resumingImport){
-			datasource = datasourceCRUDService.updateLastImportedPage(datasourceId, null,null, null);
-		}
-		return datasource;
-	}
-
-	private void importRelations(Datasource datasource, ExternalDBImporter externalDBImporter){
-		List<ExternalRelation> relations = getRelationsToImport(externalDBImporter, datasource.getTablesWhiteList());
-		datarelationService.createRelations(datasource.getId(),relations);
-	}
-
-	private List<ExternalRelation> getRelationsToImport(ExternalDBImporter externalDBImporter, List<String> datatableNamesWhiteList) {
-		if(CollectionUtils.isEmpty(datatableNamesWhiteList)){
-			return externalDBImporter.getRelations();
-		}
-		List<ExternalRelation> filteredTables =  retrier.callWithRetries(externalDBImporter::getRelations).stream()
-				.filter(relation -> datatableNamesWhiteList.contains(relation.getTableName()) &&
-						datatableNamesWhiteList.contains(relation.getForeignTableName()))
-				.collect(Collectors.toList());
-		LOGGER.debug("Importing {} relations after filtering with white list", filteredTables.size());
-		return filteredTables;
-	}
-
-
-	private void importDatatablePks(Datasource datasource, ExternalDBImporter externalDBImporter){
-		List<ExternalPrimaryKeyDescription> pKsToImport = getPKsToImport(externalDBImporter, datasource.getTablesWhiteList());
-		LOGGER.debug("Importing {} PKs", pKsToImport.size());
-		pKsToImport.forEach(externalPrimaryKeyDescription -> {
-					datatableService.findByDatasourceIdAndOriginalTableName(datasource.getId(), externalPrimaryKeyDescription.getTableName())
-							.ifPresentOrElse(datatable -> {
-								datacolumnService.findByDatatableIdAndName(datatable.getId(), externalPrimaryKeyDescription.getColumnName())
-										.ifPresentOrElse(datacolumn->{
-											datatableService.update(datatable.toBuilder()
-													.pkDatacolumnId(datacolumn.getId())
-													.build());
-										}, () -> {
-											throw new RuntimeException(String.format(
-													"Could not find Datacolumn %s expected to be PK of datatable %s",
-													externalPrimaryKeyDescription.getColumnName(), externalPrimaryKeyDescription.getTableName()));
-										});
-							},() -> {
-								throw new RuntimeException(String.format("Table %s for DS with id: %s was not found when importing its PK's", externalPrimaryKeyDescription.getTableName(),datasource.getId()));
-							});
-				});
-	}
-
-	private List<ExternalPrimaryKeyDescription> getPKsToImport(ExternalDBImporter externalDBImporter, List<String> datatableNamesWhiteList) {
-		List<ExternalPrimaryKeyDescription> pkList = retrier.callWithRetries(externalDBImporter::getPrimaryKeys);
-		if(CollectionUtils.isEmpty(datatableNamesWhiteList)){
-			return pkList;
-		}
-		List<ExternalPrimaryKeyDescription> filteredPkList = pkList.stream()
-				.filter(primaryKeyDescription -> datatableNamesWhiteList.contains(primaryKeyDescription.getTableName()))
-				.collect(Collectors.toList());
-		LOGGER.debug("Importing {} PKs after filtering with white list", filteredPkList.size());
-		return filteredPkList;
-	}
-
-	private Datasource importDatasourceMetadata(Datasource datasource, ExternalDBImporter externalDBImporter , boolean resumingImport) {
-		if(resumingImport){
-			Datasource recoveredDatasource = datasource.toBuilder()
-                    .tables(datatableService.findByDatasourceId(datasource.getId()))
-					.build();
-            LOGGER.debug("Resuming import of DS({}) {}. Last imported table was {}", datasource.getId(),datasource.getName(), datasource.getLastImportedTableName());
-            LOGGER.debug("Metadata tables recovered: for DS({}) {}: {}", datasource.getId(),datasource.getName(), recoveredDatasource.getTables().stream()
-					.map(Datatable::getOriginalTableName)
-					.collect(Collectors.toList()));
-			return recoveredDatasource;
-		}
-		LOGGER.debug("Importing metadata for DS({}) {}", datasource.getId(),datasource.getName());
-		List<Datatable> tables = obtainOriginalTables(externalDBImporter, datasource.getTablesWhiteList());
-		if(!CollectionUtils.isEmpty(datasource.getTablesWhiteList())){
-			tables = tables.stream()
-					.filter(table -> datasource.getTablesWhiteList().contains(table.getOriginalTableName()))
-					.collect(Collectors.toList());
-		}
-		LOGGER.debug("Importing {} tables", tables.size());
-		Datasource datasourceWithTablesWithoutName = datasource.toBuilder()
-				.tables(tables)
-				.build();
-		Datasource completeDatasource = datasourceCRUDService.updateIncludingTables(datasourceWithTablesWithoutName).toBuilder()
-				.tables(datatableService.findByDatasourceId(datasource.getId()).stream()
-						.map(datatable -> datatable.toBuilder()
-								.name(PostgresDdlGenerator.buildTableName(datasourceWithTablesWithoutName.getId(), datatable.getId()))
-								.build()
-						).collect(Collectors.toList()))
-				.build();
-
-		return datasourceCRUDService.updateIncludingTables(completeDatasource).toBuilder()
-				.tables(datatableService.findByDatasourceId(datasource.getId()))
-				.build();
-	}
-
-	private List<Datatable> obtainOriginalTables(ExternalDBImporter externalDBImporter, List<String> datatableNamesWhiteList) {
-		AtomicInteger i = new AtomicInteger(0);
-		return retrier.callWithRetries(() -> {
-					try {
-						return externalDBImporter.getTableNames(datatableNamesWhiteList);
-					} catch (SQLException e) {
-						throw new RowbotDBReadException("Error reading tables from datasource",e);
-					}}).stream()
-                    .map(tableName -> {
-                        LOGGER.debug("Importing table with name: {}, obtaining its columns ",tableName);
-                        return Datatable.builder()
-                            .originalTableName(tableName)
-                            .columns(obtainOriginalColumns(tableName, externalDBImporter))
-                            .build();
-                        })
-                    .collect(Collectors.toList());
-	}
-	private List<Datacolumn> obtainOriginalColumns(String tableName, ExternalDBImporter externalDBImporter) {
-		try {
-			return externalDBImporter.getColumnsNames(tableName).stream()
-					.map(columnName->{
-							LOGGER.debug("Found column with name: {}", columnName);
-							return Datacolumn.builder()
-									.name(columnName)
-									.build();
-					})
-					.collect(Collectors.toList());
-		} catch (SQLException e) {
-			throw new RuntimeException(e);
-		}
-	}
-
-	public void importOriginalData(Datasource datasource, ExternalDBImporter externalDBImporter){
-		LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
-		datasource.getTables().stream()
-				.sorted(Comparator.comparing(Datatable::getOriginalTableName))
-				.filter(datatable->
-						(datasource.getLastImportedTableName()==null ||
-								datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
-				.forEach(datatable ->{
-					importOriginalDatatable(datasource, externalDBImporter, datatable,datasource.getTables().indexOf(datatable),datasource.getTables().size());
-				});
-	}
-
-	private void importOriginalDatatable(Datasource datasource, ExternalDBImporter externalDBImporter,
-										 Datatable datatable, int datatableIndex, int totalDatatables) {
-
-		LOGGER.debug("Importing table {} ({} of {})", datatable.getOriginalTableName(), datatableIndex, totalDatatables);
-
-		Integer pageSize = Objects.nonNull(datasource.getPageSize()) && datasource.getPageSize() >0 ? datasource.getPageSize() : PAGE_SIZE;
-
-		ExternalTableDescription externalTableDescription = externalDBImporter.getExternalTableDescription(datatable);
-		int totalPages = calculatePages(externalTableDescription.getContentRowSize(),pageSize);
-
-		ImportStatus importStatus = initializeImportStatus(datasource, datatable, externalTableDescription, pageSize);
-		ImportProcessManager importProcessManager = new ImportProcessManager();
-		importProcessManager.executeWithRetry(importStatus,(s) -> {
-			try (Stream<DbReadChunk<Map<String, ?>>> contentStream =
-						 externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), pageSize, importStatus.getNextPageIndex())) {
-
-				for (DbReadChunk<Map<String, ?>> dbReadChunk : (Iterable<DbReadChunk<Map<String, ?>>>) contentStream::iterator) {
-					LOGGER.debug("DS({}): {}, Table: {} ({} of {}), Page {} of {} - inserting...",
-							datasource.getId(), datasource.getName(), datatable.getOriginalTableName(),
-							datatableIndex, totalDatatables, importStatus.getNextPageIndex(), totalPages);
-					if(isFirstPageOfTable(importStatus)){
-						saveSampleData(dbReadChunk, externalTableDescription);
-					}
-					processPageImport(dbReadChunk, externalTableDescription.getColumns(), datatable);
-
-					String statusDescription = String.format("Importing table %s (%d of %d), page %d of %d",
-									datatable.getOriginalTableName(), datatableIndex, totalDatatables,
-									importStatus.getNextPageIndex(), totalPages);
-					datasourceCRUDService.updateLastImportedPage(datasource.getId(),statusDescription, datatable.getOriginalTableName(), importStatus.getNextPageIndex());
-
-					importStatus.setAlreadyImportedRows(importStatus.getAlreadyImportedRows() + dbReadChunk.getTotalItems());
-					importStatus.setNextPageIndex(importStatus.getNextPageIndex() +1);
-				}
-			}
-		});
-	}
-
-	private boolean isFirstPageOfTable(ImportStatus importStatus) {
-		return importStatus.getNextPageIndex() == 0;
-	}
-
-	private int calculatePages(int totalRows, int pageSize) {
-		int pages = totalRows / pageSize;
-		if (totalRows % pageSize != 0) {
-			pages++;
-		}
-		return pages;
-	}
-
-	private ImportStatus initializeImportStatus(Datasource datasource, Datatable datatable, ExternalTableDescription externalTableDescription, Integer pageSize) {
-		boolean isNewTable = datasource.getLastImportedTableName() == null
-				|| !datatable.getOriginalTableName().equals(datasource.getLastImportedTableName());
-
-		if (isNewTable) {
-			LOGGER.debug("Creating table {}", externalTableDescription.getName());
-			importedDbClient.createTable(externalTableDescription);
-			return new ImportStatus(0, 0L);
-		} else {
-			int nextPage = datasource.getLastImportedPageIndex() + 1;
-			long alreadyImported = (long) nextPage * pageSize;
-			return new ImportStatus(nextPage, alreadyImported);
-		}
-	}
-
-	private void processPageImport(DbReadChunk<Map<String,?>> page, List<ExternalColumnDescription> columnDescriptions,  Datatable datatable){
-		importedDbClient.insertDataPage(
-				page,
-				datatable.getName(),
-				columnDescriptions);
-        LOGGER.debug("Page inserted.");
-	}
-
-	private void saveSampleData(DbReadChunk<Map<String,?>> dbReadChunk, ExternalTableDescription externalTableDescription) {
-		externalTableDescription.getColumns().stream()
-				.forEach(columnDescription ->
-						datacolumnService.updateSample(
-								externalTableDescription.getDatatableId(),
-								columnDescription.getName(),
-								extractColumnSample(dbReadChunk, columnDescription.getName())));
-	}
-
-	private String extractColumnSample(DbReadChunk<Map<String,?>> dbReadChunk, String columnName) {
-		return dbReadChunk.getItems().stream()
-				.limit(MAX_SAMPLES_PER_COLUMN)
-				.map(row-> row.get(columnName))
-				.map(value -> value == null?
-						Strings.EMPTY:
-						value)
-				.map(Object::toString)
-				.map(stringifiedColumnValue -> stringifiedColumnValue.length() > MAX_SAMPLE_LENGTH ?
-						stringifiedColumnValue.substring(0, MAX_SAMPLE_LENGTH) + "..." :
-						stringifiedColumnValue)
-				.collect(Collectors.joining(", "));
-	}
 }

@@ -11,8 +11,8 @@ public class TenantContext {
 
     private TenantContext(){}
 
-    public static void set(DataSourceConnectionSettings cs, String callbackToken) {
-        CURRENT.set(new TenantContextData(cs, callbackToken));
+    public static void set(String tenantId, DataSourceConnectionSettings cs, String callbackToken) {
+        CURRENT.set(new TenantContextData(tenantId,cs, callbackToken));
     }
 
     public static TenantContextData get() {
