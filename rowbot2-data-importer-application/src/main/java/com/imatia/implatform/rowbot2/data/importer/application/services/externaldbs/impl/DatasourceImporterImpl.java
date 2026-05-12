@@ -76,7 +76,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 	@Autowired
 	Retrier retrier;
 
-
 	private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
 	@Override
@@ -108,10 +107,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
       LOGGER.error(t.getMessage(), t);
 	  throw t;
     }
-
-		this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
-		this.datasourceCRUDService.updateLastImportedPage(datasourceId, null,null, null);
-		LOGGER.info("DS with Id: {} import finished.", datasourceId);
   }
 
 	private String checkConnection(Datasource datasource){
