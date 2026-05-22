@@ -139,7 +139,7 @@ keycloak:
     #enabled: false
   #secret: # defaults to keycloak (usually exists as is created when deploying keycloak). User and password will be injected in KEYCLOAK_USERNAME and KEYCLOAK_PASSWORD env. variables.
 cluster:
-    namespace: bravo # used for intra-cluster communication. Be sure to set it correctly if not default.
+    namespace: bravo-pre # used for intra-cluster communication. Be sure to set it correctly if not default.
 storage:
   enabled: true  # enable to create PVC. Customize pvc if required in templates folder
   capacity: 5G
