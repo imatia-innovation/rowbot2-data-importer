@@ -20,3 +20,12 @@ rowbot2-application:
     protocol: ${ROWBOT2_APPLICATION_SERVER_PROTOCOL}
     host: ${ROWBOT2_APPLICATION_SERVER_HOST}
     port: ${ROWBOT2_APPLICATION_SERVER_PORT}
+importers:
+  page_size: ${IMPORTERS_PAGE_SIZE}
+  metadata:
+    samplesPerColumn: 5
+    sampleLength: 15
+retries:
+  default:
+    max_attempts: ${RETRIES_DEFAULT_MAX_ATTEMPTS}
+    ms_to_retry: ${RETRIES_DEFAULT_MS_TO_RETRY}

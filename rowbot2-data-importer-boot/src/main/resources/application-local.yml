@@ -24,12 +24,7 @@ retries:
     ms_to_retry: 3
 server:
   port: 8087
-spring:
-  datasource:
-    hikari:
-      connection-timeout: 300
-      validation-timeout: 300
-      idle-timeout: 300
+
 rowbot2-application:
   server:
     protocol: http
