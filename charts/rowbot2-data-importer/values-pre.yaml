@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
   ## provided as basic setup. replace as needed
   repository: 179934523585.dkr.ecr.eu-west-3.amazonaws.com/rowbot2-data-importer
-  version: pre.0.0.1-SNAPSHOT.26284830728.1
+  version: pre.0.0.1-SNAPSHOT.26288775910.1
 #imagePullSecrets: ["ecr-cred"] # uncomment to use when not aws clusters. Secret will be provided
 nameOverride: ""
 fullnameOverride: ""
