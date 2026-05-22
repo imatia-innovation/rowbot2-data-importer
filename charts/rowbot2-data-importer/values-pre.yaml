@@ -77,7 +77,7 @@ configmap:
 
 # Service configuration. Annotations are used by cert-manager to generate certificates using cluster-issuer
 service:
-  name: rowbot2-data-importer # a default service name is generated automatically based con install name and app. Customize if needed.
+  name: rowbot2-pre-data-importer # a default service name is generated automatically based con install name and app. Customize if needed.
   type: ClusterIP
   externalPort: 80
   internalPort: 8080 # must match your application port
