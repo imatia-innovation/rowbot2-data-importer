@@ -61,7 +61,7 @@ jobs:
           version=$(cat ./charts/$REPO_NAME/$VALUES_FILE | grep version: | awk '{print $2}')
           sed -i "s#$version#$TAG#" ./charts/$REPO_NAME/$VALUES_FILE
     - name: Commit and push changes
-      uses: devops-infra/action-commit-push@master
+      uses: devops-infra/action-commit-push@v1.2.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         commit_message: "Version updated"
