@@ -1,0 +1,67 @@
+name: Maven Build, Generate Docker Image and Publish to AWS ECR
+on:
+  push:
+    paths-ignore:
+      - 'charts/**'
+    branches: [ "staging" ]
+env:
+  AWS_REGION: "eu-west-3"
+  REPO_NAME: ${{ github.event.repository.name }}
+  TAG_PREFIX: "pre"
+  TAG_SUFFIX: ${{github.run_id}}.${{github.run_attempt}}
+  VALUES_FILE: "values-pre.yaml"
+permissions:
+  id-token: write # This is required for requesting the JWT
+  contents: write  # This is required for actions/checkout and committing infra updated version
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: configure aws credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::179934523585:role/ecr-publisher
+        role-session-name: publish_ecr_session
+        aws-region: ${{ env.AWS_REGION }}
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+    - uses: int128/create-ecr-repository-action@v1
+      with:
+        repository:  ${{ env.REPO_NAME }}
+    - uses: actions/checkout@v3
+    - name: Extract Maven project version
+      run: echo "version=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)" >> $GITHUB_OUTPUT
+      id: version
+    - name: Show extracted Maven project version
+      run: echo ${{ steps.version.outputs.version }}
+    - name: Maven Build
+      uses: actions/setup-java@v3
+      with:
+        java-version: '25'
+        distribution: 'temurin'
+    - name: Run the Maven verify phase
+      run: mvn --batch-mode --update-snapshots verify
+    - name: Build the Docker image
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        TAG: ${{ env.TAG_PREFIX }}.${{ steps.version.outputs.version }}.${{ env.TAG_SUFFIX}}
+      run: |
+        echo "Building image..."
+        docker build . --file Dockerfile --tag $ECR_REGISTRY/$REPO_NAME:$TAG
+        echo "Pushing image to ECR..."+$ECR_REGISTRY/$REPO_NAME:$TAG
+        docker push $ECR_REGISTRY/$REPO_NAME:$TAG
+    - name: Update Repository and Version
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        TAG: ${{ env.TAG_PREFIX }}.${{ steps.version.outputs.version }}.${{ env.TAG_SUFFIX}}
+      run: |
+          repo=$(cat ./charts/$REPO_NAME/$VALUES_FILE | grep repository: | awk '{print $2}')
+          sed -i "s#$repo#$ECR_REGISTRY/$REPO_NAME#" ./charts/$REPO_NAME/$VALUES_FILE
+          version=$(cat ./charts/$REPO_NAME/$VALUES_FILE | grep version: | awk '{print $2}')
+          sed -i "s#$version#$TAG#" ./charts/$REPO_NAME/$VALUES_FILE
+    - name: Commit and push changes
+      uses: devops-infra/action-commit-push@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        commit_message: "Version updated"
