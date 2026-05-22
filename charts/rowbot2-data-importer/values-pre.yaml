@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
   ## provided as basic setup. replace as needed
   repository: 179934523585.dkr.ecr.eu-west-3.amazonaws.com/rowbot2-data-importer
-  version: pre.0.0.1.22718509456.1
+  version: pre.0.0.1-SNAPSHOT.26278581761.1
 #imagePullSecrets: ["ecr-cred"] # uncomment to use when not aws clusters. Secret will be provided
 nameOverride: ""
 fullnameOverride: ""
@@ -77,7 +77,7 @@ configmap:
 
 # Service configuration. Annotations are used by cert-manager to generate certificates using cluster-issuer
 service:
-  name: rowbot2-data-importer # a default service name is generated automatically based con install name and app. Customize if needed.
+  name: rowbot2-pre-data-importer # a default service name is generated automatically based con install name and app. Customize if needed.
   type: ClusterIP
   externalPort: 80
   internalPort: 8080 # must match your application port
@@ -138,7 +138,8 @@ keycloak:
     # admin: ## if credentials are needed to interact with keycloak admin api. provide them using the secret.
     #enabled: false
   #secret: # defaults to keycloak (usually exists as is created when deploying keycloak). User and password will be injected in KEYCLOAK_USERNAME and KEYCLOAK_PASSWORD env. variables.
-
+cluster:
+    namespace: bravo-pre # used for intra-cluster communication. Be sure to set it correctly if not default.
 storage:
   enabled: true  # enable to create PVC. Customize pvc if required in templates folder
   capacity: 5G
