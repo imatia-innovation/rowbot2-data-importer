@@ -10,6 +10,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.DbReadChunk;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.util.JdbcPageStreamer;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.util.TypedStatementParameter;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
@@ -103,23 +104,32 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     protected abstract String getRowCountQuery(String originalTableName);
 
     @Override
-    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Integer pageSize, int startingPageIndex){
+    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Long maxRowsToImport, Integer pageSize, int startingPageIndex){
         String qualifiedTableName = getQualifiedTableName(datatable.getOriginalTableName());
-        String tableDataQuery = getTableQuery(qualifiedTableName);
-        LOGGER.debug("Getting data from table {} using query: {}, blockSize {}, offset: {}"
-                , qualifiedTableName, tableDataQuery, pageSize, currentlyImportedRowCount);
+        String tableDataQuery = getTableQuery(qualifiedTableName, maxRowsToImport);
+        LOGGER.debug("Getting data from table {} using query: {}, blockSize {}, offset: {}",
+                qualifiedTableName, tableDataQuery, pageSize, currentlyImportedRowCount);
         try{
             return JdbcPageStreamer.streamPages(
                     sqlDataSource,
                     tableDataQuery,
                     pageSize,
-                    List.of(new TypedStatementParameter(Types.BIGINT,
-                            currentlyImportedRowCount)),
+                    calculateTableDataParameters(currentlyImportedRowCount, maxRowsToImport),
                     startingPageIndex
             );
         }catch(SQLException e){
             throw new RowbotDBReadException("There was a problem trying to retrieve datatable: " + datatable.getOriginalTableName(), e);
         }
+    }
+
+    @NotNull
+    private List<TypedStatementParameter> calculateTableDataParameters(Long currentlyImportedRowCount, Long maxRowsToImport) {
+        return hasQueryLimit(maxRowsToImport)?
+
+                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount)):
+
+                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount),
+                        new TypedStatementParameter(Types.BIGINT, maxRowsToImport - currentlyImportedRowCount));
     }
 
 
@@ -128,7 +138,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                 " WHERE 1=0";
     }
 
-    protected abstract String getTableQuery(String qualifiedTableName);
+    protected abstract String getTableQuery(String qualifiedTableName, Long maxRowsToImport);
 
 
     private int getTableRowCount(Datatable datatable){
@@ -269,6 +279,10 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     protected String getSchema(){
         return !StringUtils.hasText(datasource.getSchema()) ? getDefaultSchema() : datasource.getSchema();
+    }
+
+    protected boolean hasQueryLimit(Long maxRowsToImport){
+       return (maxRowsToImport!=null && maxRowsToImport>=0);
     }
 
 }

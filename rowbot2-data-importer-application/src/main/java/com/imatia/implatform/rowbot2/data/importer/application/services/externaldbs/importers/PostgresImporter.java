@@ -43,7 +43,10 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		return PostgresqlUtils.escapeIdentifier(identifier);
 	}
 
-	protected String getTableQuery(String qualifiedTableName){
+	protected String getTableQuery(String qualifiedTableName, Long maxRowsToImport){
+		if(hasQueryLimit(maxRowsToImport)){
+			return "SELECT * FROM " + qualifiedTableName + " OFFSET ? LIMIT ?";
+		}
 		return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
 	}
 
