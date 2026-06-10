@@ -76,12 +76,8 @@ public class DatasourceImporterImpl implements DatasourceImporter {
             relationsImporter.importRelations(datasource, externalDBImporter);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", e.getMessage());
-            return;
+            throw e;
         }
-        LOGGER.info("DS with id: {} data read completed.", datasourceId);
-        this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "OK", null);
-        LOGGER.info("DS with Id: {} import finished.", datasourceId);
     }
 
     private String checkConnection(Datasource datasource) {
