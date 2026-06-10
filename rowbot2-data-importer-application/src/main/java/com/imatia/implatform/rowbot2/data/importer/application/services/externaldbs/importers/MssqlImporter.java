@@ -29,7 +29,7 @@ public class MssqlImporter extends AbstractJDBCImporter {
     }
 
     @Override
-    protected String getTableQuery(String qualifiedTableName, Long maxRowsToImport) {
+    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
         if(hasQueryLimit(maxRowsToImport)){
             return "SELECT * FROM " + qualifiedTableName + " ORDER BY (SELECT NULL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }

@@ -107,6 +107,7 @@ public class MetadataImporter {
                     Datatable.builder().originalTableName(tableName).build(),
                     0L,
                     MAX_SAMPLE_LENGTH,
+                    MAX_SAMPLE_LENGTH,
                     0);
             DbReadChunk<Map<String,?>> dbReadChunk = processTableDataStream(currentTableSampleData, tableName);
             return externalDBImporter.getColumnsNames(tableName).stream()

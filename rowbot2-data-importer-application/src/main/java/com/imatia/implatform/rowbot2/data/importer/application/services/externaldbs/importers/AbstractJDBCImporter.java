@@ -104,7 +104,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     protected abstract String getRowCountQuery(String originalTableName);
 
     @Override
-    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Long maxRowsToImport, Integer pageSize, int startingPageIndex){
+    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Integer maxRowsToImport, Integer pageSize, int startingPageIndex){
         String qualifiedTableName = getQualifiedTableName(datatable.getOriginalTableName());
         String tableDataQuery = getTableQuery(qualifiedTableName, maxRowsToImport);
         LOGGER.debug("Getting data from table {} using query: {}, blockSize {}, offset: {}",
@@ -123,13 +123,13 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     }
 
     @NotNull
-    private List<TypedStatementParameter> calculateTableDataParameters(Long currentlyImportedRowCount, Long maxRowsToImport) {
+    private List<TypedStatementParameter> calculateTableDataParameters(Long currentlyImportedRowCount, Integer maxRowsToImport) {
         return hasQueryLimit(maxRowsToImport)?
 
-                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount)):
-
                 List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount),
-                        new TypedStatementParameter(Types.BIGINT, maxRowsToImport - currentlyImportedRowCount));
+                        new TypedStatementParameter(Types.BIGINT, maxRowsToImport - currentlyImportedRowCount)):
+
+                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount));
     }
 
 
@@ -138,7 +138,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                 " WHERE 1=0";
     }
 
-    protected abstract String getTableQuery(String qualifiedTableName, Long maxRowsToImport);
+    protected abstract String getTableQuery(String qualifiedTableName, Integer maxRowsToImport);
 
 
     private int getTableRowCount(Datatable datatable){
@@ -281,7 +281,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         return !StringUtils.hasText(datasource.getSchema()) ? getDefaultSchema() : datasource.getSchema();
     }
 
-    protected boolean hasQueryLimit(Long maxRowsToImport){
+    protected boolean hasQueryLimit(Integer maxRowsToImport){
        return (maxRowsToImport!=null && maxRowsToImport>=0);
     }
 

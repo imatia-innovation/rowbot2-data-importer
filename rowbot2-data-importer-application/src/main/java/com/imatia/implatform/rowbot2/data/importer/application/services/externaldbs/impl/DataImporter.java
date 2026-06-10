@@ -65,7 +65,7 @@ public class DataImporter {
         ImportProcessManager importProcessManager = new ImportProcessManager();
         importProcessManager.executeWithRetry(importStatus,(s) -> {
             try (Stream<DbReadChunk<Map<String, ?>>> contentStream =
-                         externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), pageSize, importStatus.getNextPageIndex())) {
+                         externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), datasource.getMaxRows(), pageSize, importStatus.getNextPageIndex())) {
 
                 for (DbReadChunk<Map<String, ?>> dbReadChunk : (Iterable<DbReadChunk<Map<String, ?>>>) contentStream::iterator) {
                     LOGGER.debug("DS({}): {}, Table: {} ({} of {}), Page {} of {} - inserting...",
