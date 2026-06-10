@@ -116,9 +116,12 @@ public class DataImporter {
         LOGGER.debug("Page inserted.");
     }
 
-    private long calculatePages(int totalRows, int maxRowsToImport, long alreadyImportedRows, int pageSize) {
+    private long calculatePages(int totalRows, Integer maxRowsToImport, long alreadyImportedRows, int pageSize) {
+        int totalRowsToImport = maxRowsToImport == null?
+                totalRows:
+                Math.min(totalRows, maxRowsToImport);
         long rowsToImport = Math.max(0,
-                Math.min(totalRows, maxRowsToImport) - alreadyImportedRows);
+                totalRowsToImport - alreadyImportedRows);
         long pages = rowsToImport / pageSize;
         if (rowsToImport % pageSize != 0) {
             pages++;
