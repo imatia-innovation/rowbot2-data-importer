@@ -1,0 +1,32 @@
+default:
+  post:
+    operationId: datasource-import
+    tags:
+      - External Datasource Import
+    summary: Trigger async external datasource import process.
+    description: >
+      Trigger async external datasource import process.
+    parameters:
+      - name: tenant-id
+        in: header
+        required: true
+        description: Tenant Id for which the datasource connection settings are provided
+        schema:
+          type: string
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ImportRequestDTO'
+    responses:
+      '400':
+        $ref: '../common/responses.yml#/components/responses/BadRequest'
+      '401':
+        $ref: '../common/responses.yml#/components/responses/Unauthorized'
+      '404':
+        $ref: '../common/responses.yml#/components/responses/NotFound'
+      default:
+        $ref: '../common/responses.yml#/components/responses/Unexpected'
+
+

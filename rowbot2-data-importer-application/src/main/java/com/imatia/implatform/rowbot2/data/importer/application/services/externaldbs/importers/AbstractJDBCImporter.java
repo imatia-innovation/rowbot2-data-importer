@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     protected static final String ROW_COUNT_ALIAS = "rowCount";
+    protected static final int LOGIN_ATTEMP_TIMEOUT = 5;
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJDBCImporter.class);
 
     protected DataSource sqlDataSource;

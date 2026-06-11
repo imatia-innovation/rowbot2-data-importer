@@ -10,4 +10,6 @@ servers:
 
 paths:
   /externaldatasource:
-    $ref: 'api/externaldatasource.yml#/default'
+    $ref: 'api/import-datasource.yml#/default'
+  /checkconnection:
+    $ref: 'api/check-connection.yml#/default'

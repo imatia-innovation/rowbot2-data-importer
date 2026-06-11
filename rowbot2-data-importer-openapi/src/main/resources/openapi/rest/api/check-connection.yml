@@ -1,0 +1,37 @@
+default:
+  post:
+    operationId: check-connection
+    tags:
+      - External Datasource Import
+    summary: Validates if there is an accesible datasource with provided connection settings.
+    description: >
+      Just tries to validate if connection is ok, if not returns error with details. Does not trigger any import process.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ExternalDataSourceConnectionInfoDTO'
+
+    responses:
+      '200':
+        description: Connection successful
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yml#/components/schemas/ConnectionValidationResponseDTO'
+      '400':
+        $ref: '../common/responses.yml#/components/responses/BadRequest'
+        description: Connection parameters are invalidasdas
+      '401':
+        $ref: '../common/responses.yml#/components/responses/Unauthorized'
+
+      '422':
+        description: Connection parameters are valid but connection attempt failed
+        content:
+          application/json:
+            schema:
+              $ref: '../components/schemas.yml#/components/schemas/ConnectionValidationResponseDTO'
+
+      default:
+        $ref: '../common/responses.yml#/components/responses/Unexpected'

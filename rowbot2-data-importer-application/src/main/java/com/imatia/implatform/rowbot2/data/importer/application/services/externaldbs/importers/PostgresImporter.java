@@ -33,9 +33,8 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		postgresDatasource.setUser(datasource.getUsername());
 		postgresDatasource.setPassword(datasource.getPass());
 		postgresDatasource.setDatabaseName(datasource.getDbname());
-		if(datasource.getSchema()!=null){
-			postgresDatasource.setCurrentSchema(datasource.getSchema());
-		}
+		postgresDatasource.setCurrentSchema(getSchema());
+		postgresDatasource.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
 		return postgresDatasource;
 	}
 

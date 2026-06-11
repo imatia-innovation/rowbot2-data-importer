@@ -21,6 +21,7 @@ public class MssqlImporter extends AbstractJDBCImporter {
         sqlServerDatasource.setPassword(datasource.getPass());
         sqlServerDatasource.setDatabaseName(datasource.getDbname());
         sqlServerDatasource.setTrustServerCertificate(true);
+        sqlServerDatasource.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
         return sqlServerDatasource;
     }
 

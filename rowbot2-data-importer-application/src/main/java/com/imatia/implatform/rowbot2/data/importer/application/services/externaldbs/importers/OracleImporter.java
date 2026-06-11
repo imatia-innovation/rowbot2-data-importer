@@ -33,6 +33,7 @@ public class OracleImporter extends AbstractJDBCImporter{
             oracleDatasource.setURL(url);
             oracleDatasource.setUser(datasource.getUsername());
             oracleDatasource.setPassword(datasource.getPass());
+            oracleDatasource.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
             return oracleDatasource;
         } catch (SQLException e) {
             LOGGER.error("Error creating ORACLE Datasource: [{}], Username: {}, Password: {}",

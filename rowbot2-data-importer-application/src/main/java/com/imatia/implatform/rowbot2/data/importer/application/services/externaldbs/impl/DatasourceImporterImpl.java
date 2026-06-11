@@ -1,6 +1,7 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.impl;
 
 import com.imatia.implatform.rowbot2.data.importer.application.services.*;
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ConnectionValidator;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdNotExistentOnDBException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RowbotRuntimeException;
@@ -9,6 +10,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ExternalDBImporterFactory;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers.ExternalDBImporter;
 
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceConnectionSettings;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -25,6 +27,9 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 
     @Autowired
     DataImporter dataImporter;
+
+    @Autowired
+    ConnectionValidator connectionValidator;
 
     @Autowired
     RelationsImporter relationsImporter;
@@ -56,7 +61,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
                     .orElseThrow(() -> new IdNotExistentOnDBException("Datasource with id " + datasourceId + " does not exist on DB"));
             updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Checking connection", null);
 
-            String connectionError = checkConnection(datasource);
+            String connectionError = connectionValidator.checkConnection(datasource);
             if (StringUtils.hasText(connectionError)) {
                 throw new RowbotRuntimeException(
                         "There was an error trying to connect to the datasource, Error: " + connectionError);
@@ -82,10 +87,6 @@ public class DatasourceImporterImpl implements DatasourceImporter {
         LOGGER.info("DS with id: {} data read completed.", datasourceId);
         this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "OK", null);
         LOGGER.info("DS with Id: {} import finished.", datasourceId);
-    }
-
-    private String checkConnection(Datasource datasource) {
-        return externalDBImporterFactory.create(datasource).checkConnection();
     }
 
     private void updateDatasourceStatus(Long datasourceId, DatasourceStatus status, String statusDetail, Integer lastImportedPage) {

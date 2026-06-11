@@ -1,0 +1,81 @@
+
+components:
+  schemas:
+    ImportRequestDTO:
+      type: object
+      properties:
+        externalDatasourceId:
+          description: The external datasource id to be imported
+          type: integer
+          format: int64
+        resume:
+          description: Flag to resume previous import or re-import everything
+          type: boolean
+          default: false
+        callbackToken:
+          description: Tenant token for callback
+          type: string
+        tenantDataSourceConnectionSettings:
+          { $ref: '#/components/schemas/TenantDataSourceConnectionSettingsDTO' }
+      required:
+        - externalDatasourceId
+        - resume
+        - callbackToken
+        - tenantDataSourceConnectionSettings
+    TenantDataSourceConnectionSettingsDTO:
+      type: object
+      properties:
+        url:
+          description: Tenant Datasource connection URI
+          type: string
+        username:
+          description: Tenant Datasource connection username
+          type: string
+        password:
+          description: Tenant Datasource password
+          type: string
+      required:
+        - url
+        - username
+        - password
+    ExternalDataSourceConnectionInfoDTO:
+      type: object
+      properties:
+        url:
+          description: Datasource host
+          type: string
+        port:
+          description: Datasource port
+          type: integer
+        dbname:
+          description: Datasource database name
+          type: string
+        schema:
+          description: Datasource schema name
+          type: string
+        datasourceType:
+          description: Datasource type
+          type: string
+        username:
+          description: Tenant Datasource connection username
+          type: string
+        pass:
+          description: Tenant Datasource password
+          type: string
+      required:
+        - url
+        - port
+        - dbname
+        - schema
+        - username
+        - pass
+        - type
+    ConnectionValidationResponseDTO:
+      type: object
+      properties:
+        success:
+          description: Information about success when trying to connect
+          type: boolean
+        error-description:
+          description: Information detail about failures
+          type: string

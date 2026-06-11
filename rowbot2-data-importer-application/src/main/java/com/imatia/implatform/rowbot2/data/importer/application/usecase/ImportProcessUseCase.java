@@ -1,7 +1,9 @@
 package com.imatia.implatform.rowbot2.data.importer.application.usecase;
 
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ConnectionValidator;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.DatasourceImporter;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.impl.DatasourceImporterImpl;
+import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.TenantContextAware;
 
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceConnectionSettings;
@@ -24,7 +26,7 @@ public class ImportProcessUseCase {
     @Autowired
     IRowbot2RestClient rowbot2ApplicationService;
 
-
+    private ConnectionValidator connectionValidator;
     private DatasourceImporter datasourceImporter;
 
     private MultiTenantDataSourceProvider multiTenantDataSourceProvider;
@@ -33,7 +35,7 @@ public class ImportProcessUseCase {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ImportProcessUseCase.class);
 
-    public void handle(String tenantId, Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings,
+    public void handleImport(String tenantId, Long datasourceId, DataSourceConnectionSettings dataSourceConnectionSettings,
                        String callbackToken, boolean resume) {
         Map<Long, CompletableFuture<Void>> tenantImports = getTenantImports(tenantId);
 
@@ -43,6 +45,10 @@ public class ImportProcessUseCase {
             LOGGER.warn("Import process for DS({}) is already running for tenant {}", datasourceId, tenantId);
         }
 
+    }
+
+    public String handleCheckConnection(Datasource datasource) {
+        return connectionValidator.checkConnection(datasource);
     }
 
     private Map<Long, CompletableFuture<Void>> getTenantImports(String tenantId) {
