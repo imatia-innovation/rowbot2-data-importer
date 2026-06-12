@@ -49,8 +49,12 @@ public class MysqlImporter extends AbstractJDBCImporter {
     }
 
     @Override
-    protected String getTableQuery(String qualifiedTableName) {
-        return "SELECT * FROM " + qualifiedTableName + " LIMIT ? OFFSET ?";
+    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
+        if(hasQueryLimit(maxRowsToImport)){
+            return "SELECT * FROM " + qualifiedTableName + " LIMIT ? OFFSET ?";
+        }
+        return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
+
     }
 
     @Override
