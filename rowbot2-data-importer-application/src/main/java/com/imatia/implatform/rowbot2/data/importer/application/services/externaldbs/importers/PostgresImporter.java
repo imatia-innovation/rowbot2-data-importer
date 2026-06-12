@@ -42,7 +42,10 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		return PostgresqlUtils.escapeIdentifier(identifier);
 	}
 
-	protected String getTableQuery(String qualifiedTableName){
+	protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport){
+		if(hasQueryLimit(maxRowsToImport)){
+			return "SELECT * FROM " + qualifiedTableName + " OFFSET ? LIMIT ?";
+		}
 		return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
 	}
 
@@ -89,12 +92,25 @@ public class PostgresImporter extends AbstractJDBCImporter {
 	@Override
 	protected String getRowCountQuery(String originalTableName) {
 		String schema = this.getSchema();
-		return "SELECT c.reltuples AS " + ROW_COUNT_ALIAS + " " +
-				"FROM pg_class c " +
-				"JOIN pg_namespace n ON n.oid = c.relnamespace " +
-				"WHERE UPPER(n.nspname) = UPPER('" + schema + "') " +
-				"AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
-				"AND c.relkind IN ('r', 'p');";
+
+		return "SELECT SUM(partialcount) as  " + ROW_COUNT_ALIAS + " " +
+				"FROM ( " +
+				"	SELECT c.reltuples AS partialcount " +
+				"	FROM pg_class c " +
+				" 	JOIN pg_namespace n ON n.oid = c.relnamespace " +
+				"	WHERE UPPER(n.nspname) = UPPER('"+ schema +"') " +
+				"	AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
+				"	AND c.relkind IN ('r') " +
+				"UNION ALL " +
+				"	SELECT c.reltuples AS partialcount " +
+				"	FROM pg_class c " +
+				"	JOIN pg_inherits i ON i.inhrelid = c.oid " +
+				"	JOIN pg_class parent ON parent.oid = i.inhparent " +
+				"	JOIN pg_namespace pn ON pn.oid = parent.relnamespace " +
+				"	WHERE UPPER(pn.nspname) = UPPER('"+ schema +"') " +
+				"	AND UPPER(parent.relname) = UPPER('" + originalTableName + "') " +
+				"	and c.relkind in ('p') " +
+				")partialCounts;";
 	}
 
 	@Override

@@ -61,10 +61,17 @@ public class ImportProcessUseCase {
 
     private void startImport(Map<Long, CompletableFuture<Void>> tenantImports, String tenantId, Long datasourceId,
                              DataSourceConnectionSettings dataSourceConnectionSettings, String callbackToken, boolean resume) {
-        CompletableFuture<Void> importTask = CompletableFuture.runAsync(
-                new TenantContextAware(tenantId, dataSourceConnectionSettings,callbackToken,
-                        () -> datasourceImporter.importDatasource(datasourceId, resume), multiTenantDataSourceProvider));
-        tenantImports.put(datasourceId, importTask);
+        CompletableFuture<Void> importTask = CompletableFuture.runAsync(new TenantContextAware(tenantId, dataSourceConnectionSettings,
+                callbackToken, () -> {
+            try{
+                datasourceImporter.importDatasource(datasourceId, resume);
+                LOGGER.info("DS with id: {} data read completed.", datasourceId);
+                rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId,"OK", null);
+                LOGGER.info("DS with Id: {} import finished.", datasourceId);
+            }catch(Throwable t){
+                rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", t.getMessage());
+            }
+        }, multiTenantDataSourceProvider));
 
         importTask.whenComplete((result, throwable) -> {
             tenantImports.remove(datasourceId);
