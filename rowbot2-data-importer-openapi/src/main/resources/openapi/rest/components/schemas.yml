@@ -66,7 +66,6 @@ components:
         - url
         - port
         - dbname
-        - schema
         - username
         - pass
         - type
