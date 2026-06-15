@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.Locale;
 
 public class MysqlImporter extends AbstractJDBCImporter {
@@ -53,30 +54,36 @@ public class MysqlImporter extends AbstractJDBCImporter {
         if(hasQueryLimit(maxRowsToImport)){
             return "SELECT * FROM " + qualifiedTableName + " LIMIT ? OFFSET ?";
         }
-        return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
+        return "SELECT * FROM " + qualifiedTableName + " LIMIT 18446744073709551615 OFFSET ?";
 
     }
 
     @Override
     public String getRowCountQuery(String originalTableName) {
         String qualifiedTableName = getQualifiedTableName(originalTableName);
-        return "SELECT COUNT(*) AS " + AbstractJDBCImporter.ROW_COUNT_ALIAS +
-                " FROM " + qualifiedTableName;
+        return "SELECT table_rows as " + ROW_COUNT_ALIAS + "\n" +
+                "FROM information_schema.tables\n" +
+                "WHERE table_schema = DATABASE()\n" +
+                "  AND table_name = '" + qualifiedTableName + "';";
+    }
+
+    public String getSlowRowCountQuery(String originalTableName) {
+        return "SELECT count(*) AS '" + ROW_COUNT_ALIAS + "' " +
+                "from " + getQualifiedTableName(originalTableName) + ";";
     }
 
     @Override
     protected String getRelationsQuery() {
-        return "SELECT " +
-                " kcu.constraint_name AS conname, " +
-                " kcu.table_name AS ftable, " +
-                " kcu.column_name AS fcolumn_name, " +
-                " kcu.referenced_table_name AS `table`, " +
-                " kcu.referenced_column_name AS column_name " +
-                " FROM information_schema.key_column_usage kcu " +
-                " WHERE kcu.referenced_table_name IS NOT NULL " +
-                " AND kcu.table_schema = DATABASE() " +
-                " ORDER BY kcu.constraint_name, kcu.ordinal_position "
-        ;
+        return "SELECT\n" +
+                "    kcu.constraint_name AS " + CONSTRAINT_NAME_ALIAS + ",\n" +
+                "    kcu.table_name AS " + TABLE_NAME_ALIAS + ",\n" +
+                "    kcu.column_name AS " + COLUMN_NAME_ALIAS + ",\n" +
+                "    kcu.referenced_table_name AS " + FOREIGN_TABLE_NAME_ALIAS + ",\n" +
+                "    kcu.referenced_column_name AS " + FOREIGN_COLUMN_NAME_ALIAS + "\n" +
+                "FROM information_schema.key_column_usage kcu\n" +
+                "WHERE kcu.referenced_table_name IS NOT NULL\n" +
+                "  AND kcu.table_schema = DATABASE()\n" +
+                "ORDER BY kcu.constraint_name, kcu.ordinal_position;";
     }
 
     // ---------------------------

@@ -8,7 +8,6 @@ import java.util.List;
 @Value
 @Builder(toBuilder = true)
 public class ExternalRelation {
-	String originalConstraintId;
 	String constraintName;
 	String tableName;
 	List<String> columnNames;

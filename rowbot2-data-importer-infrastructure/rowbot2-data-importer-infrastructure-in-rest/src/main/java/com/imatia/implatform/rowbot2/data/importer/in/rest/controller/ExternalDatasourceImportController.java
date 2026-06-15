@@ -4,6 +4,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.usecase.ImportPro
 import com.imatia.implatform.rowbot2.data.importer.in.rest.controller.mapper.DatasourceConnectionSettingsMapper;
 import com.imatia.implatform.rowbot2.data.importer.in.rest.controller.mapper.DatasourceMapper;
 import com.imatia.implatform.rowbot2.data.importer.openapi.dto.ConnectionValidationResponseDTO;
+import com.imatia.implatform.rowbot2.data.importer.openapi.dto.DatasourceImport200Response;
 import com.imatia.implatform.rowbot2.data.importer.openapi.dto.ExternalDataSourceConnectionInfoDTO;
 import com.imatia.implatform.rowbot2.data.importer.openapi.dto.ImportRequestDTO;
 import com.imatia.implatform.rowbot2.data.importer.openapi.service.ExternalDatasourceImportApi;
@@ -30,7 +31,7 @@ public class ExternalDatasourceImportController implements ExternalDatasourceImp
     }
 
     @Override
-    public ResponseEntity<Void> datasourceImport(String tenantId, ImportRequestDTO importRequestDTO) {
+    public ResponseEntity<DatasourceImport200Response> datasourceImport(String tenantId, ImportRequestDTO importRequestDTO) {
         // returns immediately (async)
         importProcessUseCase.handleImport(tenantId,importRequestDTO.getExternalDatasourceId(),
                 datasourceConnectionSettingsMapper.dtoToVO(importRequestDTO.getTenantDataSourceConnectionSettings()),

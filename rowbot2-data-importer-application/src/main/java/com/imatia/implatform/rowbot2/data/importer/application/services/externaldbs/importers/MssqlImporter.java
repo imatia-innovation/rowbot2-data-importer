@@ -45,28 +45,31 @@ public class MssqlImporter extends AbstractJDBCImporter {
                 "AND p.index_id IN (0,1);";
     }
 
+    public String getSlowRowCountQuery(String originalTableName) {
+        return "SELECT count(*) AS '" + ROW_COUNT_ALIAS + "' " +
+                "from " + getQualifiedTableName(originalTableName) + ";";
+    }
+
     protected String getRelationsQuery(){
         return "SELECT\n" +
-                "    fk.object_id                 AS oid,\n" +
-                "    fk.name                      AS conname,\n" +
-                "    tp.name                      AS ftable,\n" +
-                "    cp.name                      AS fcolumn_name,\n" +
-                "    tr.name                      AS [table],\n" +
-                "    cr.name                      AS column_name\n" +
+                "    fk.name AS " + CONSTRAINT_NAME_ALIAS + ",\n" +
+                "    tr.name AS " + TABLE_NAME_ALIAS + ",\n" +
+                "    cr.name AS " + COLUMN_NAME_ALIAS + ",\n" +
+                "    tp.name AS " + FOREIGN_TABLE_NAME_ALIAS + ",\n" +
+                "    cp.name AS " + FOREIGN_COLUMN_NAME_ALIAS + "\n" +
                 "FROM sys.foreign_keys fk\n" +
                 "INNER JOIN sys.foreign_key_columns fkc\n" +
                 "    ON fk.object_id = fkc.constraint_object_id\n" +
-                "INNER JOIN sys.tables tp\n" +
-                "    ON fkc.parent_object_id = tp.object_id\n" +
-                "INNER JOIN sys.columns cp\n" +
-                "    ON cp.object_id = tp.object_id\n" +
-                "   AND cp.column_id = fkc.parent_column_id\n" +
                 "INNER JOIN sys.tables tr\n" +
-                "    ON fkc.referenced_object_id = tr.object_id\n" +
+                "    ON fkc.parent_object_id = tr.object_id\n" +
                 "INNER JOIN sys.columns cr\n" +
                 "    ON cr.object_id = tr.object_id\n" +
-                "   AND cr.column_id = fkc.referenced_column_id\n" +
-                "ORDER BY fk.object_id, fkc.constraint_column_id;";
+                "   AND cr.column_id = fkc.parent_column_id\n" +
+                "INNER JOIN sys.tables tp\n" +
+                "    ON fkc.referenced_object_id = tp.object_id\n" +
+                "INNER JOIN sys.columns cp\n" +
+                "    ON cp.object_id = tp.object_id\n" +
+                "   AND cp.column_id = fkc.referenced_column_id;";
     }
 
     protected String getPrimaryKeysQuery(){

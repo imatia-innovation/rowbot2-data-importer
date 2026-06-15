@@ -78,3 +78,14 @@ components:
         error-description:
           description: Information detail about failures
           type: string
+    ErrorResponseDTO:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties:
+            type: string

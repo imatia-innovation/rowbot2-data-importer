@@ -42,8 +42,7 @@ public class DataImporter {
         LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
         datasource.getTables().stream()
                 .sorted(Comparator.comparing(Datatable::getOriginalTableName))
-                .filter(datatable-> !datatable.getOriginalTableName().equals("fact_prem_trans") &&
-                        (datasource.getLastImportedTableName()==null ||
+                .filter(datatable-> (datasource.getLastImportedTableName()==null ||
                                 datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
                 .forEach(datatable ->{
                     importOriginalDatatable(datasource, externalDBImporter, datatable,datasource.getTables().indexOf(datatable),datasource.getTables().size());

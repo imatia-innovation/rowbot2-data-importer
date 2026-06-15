@@ -20,6 +20,16 @@ default:
           schema:
             $ref: '../components/schemas.yml#/components/schemas/ImportRequestDTO'
     responses:
+      '200':
+        description: Import process started successfully
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: Import process started successfully
       '400':
         $ref: '../common/responses.yml#/components/responses/BadRequest'
       '401':
