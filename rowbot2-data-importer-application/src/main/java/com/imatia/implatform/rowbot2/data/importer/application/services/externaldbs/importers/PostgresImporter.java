@@ -126,7 +126,7 @@ public class PostgresImporter extends AbstractJDBCImporter {
 	public List<String> getTableNames(List<String> tablesWhiteList) {
 		List<String> tableNames = new ArrayList<>();
 
-		try(Connection connection = sqlDataSource.getConnection();
+		try(Connection connection = getConnection();
 				PreparedStatement statement = getTableNamesQueryPreparedStatement(connection);
 				ResultSet rs = statement.executeQuery()
 		){

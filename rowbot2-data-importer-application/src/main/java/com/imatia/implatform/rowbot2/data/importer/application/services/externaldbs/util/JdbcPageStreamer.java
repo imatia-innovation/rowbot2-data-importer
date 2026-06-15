@@ -17,21 +17,20 @@ import java.util.stream.StreamSupport;
 public class JdbcPageStreamer {
 
 	public static Stream<DbReadChunk<Map<String, ?>>> streamPages(
-			DataSource datasource,
+			Connection connection,
 			String sql,
 			int pageSize) throws SQLException {
-		return streamPages(datasource, sql, pageSize, Collections.emptyList(), 0);
+		return streamPages(connection, sql, pageSize, Collections.emptyList(), 0);
 	}
 
 	public static Stream<DbReadChunk<Map<String, ?>>> streamPages(
-			DataSource dataSource,
+			Connection connection,
 			String sql,
 			int pageSize,
 			List<TypedStatementParameter> parameters,
 			int startingPageIndex
 	) throws SQLException {
 
-		Connection connection = dataSource.getConnection();
 		connection.setAutoCommit(false);
 
 		PreparedStatement preparedStatement = connection.prepareStatement(

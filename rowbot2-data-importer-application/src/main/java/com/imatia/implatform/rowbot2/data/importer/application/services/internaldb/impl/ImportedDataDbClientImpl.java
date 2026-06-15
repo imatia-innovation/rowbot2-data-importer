@@ -76,9 +76,10 @@ public class ImportedDataDbClientImpl implements ImportedDbClient {
 		if(requestedColumns.isEmpty()){
 			return Stream.empty();
 		}
+
 		try{
-			return JdbcPageStreamer.streamPages(
-					multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()),
+			Connection destinationDatabaseConnection = multiTenantDataSourceProvider.getOrCreate(TenantContext.get().connectionSettings()).getConnection();
+			return JdbcPageStreamer.streamPages(destinationDatabaseConnection,
 				PostgresDqlGenerator.buildFullTableQuery(datatable, requestedColumns),
 				pageSize);
 		} catch (SQLException e) {

@@ -38,8 +38,9 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     protected static final String FOREIGN_COLUMN_NAME_ALIAS = "foreign_column_name";
 
 
-    protected DataSource sqlDataSource;
+    private DataSource sqlDataSource;
     protected Datasource datasource;
+    protected Connection currentConnection;
 
     protected abstract String escapeIdentifier(String identifier);
 
@@ -60,8 +61,17 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         this.sqlDataSource = buildDataSource();
     }
 
+    protected Connection getConnection() throws SQLException {
+        if (this.currentConnection == null) {
+            this.currentConnection = sqlDataSource.getConnection();
+        } else if (this.currentConnection.isClosed() || !this.currentConnection.isValid(1000)) {
+            this.currentConnection = sqlDataSource.getConnection();
+        }
+        return this.currentConnection;
+    }
+
     public String checkConnection(){
-        try(Connection connection = sqlDataSource.getConnection()) {
+        try(Connection connection = getConnection()) {
             return null;
         } catch (SQLException e) {
             return e.getMessage();
@@ -71,7 +81,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     public List<String> getTableNames(List<String> tablesWhiteList) throws SQLException {
         List<String> tableNames = new ArrayList<>();
         String[] types = {"TABLE"};
-        try(Connection connection = sqlDataSource.getConnection();
+        try(Connection connection = getConnection();
             ResultSet tablasResultSet= connection.getMetaData()
                     .getTables(null, getSchema(), "%", types)) {
             while (tablasResultSet.next()) {
@@ -92,7 +102,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     public List<String> getColumnsNames(String tableName) throws SQLException{
         List<String> columnNames = new ArrayList<>();
-        try(Connection connection = sqlDataSource.getConnection();
+        try(Connection connection = getConnection();
             ResultSet columnsResultSet = connection.getMetaData()
                     .getColumns(null, getSchema(), tableName, null)) {
             while (columnsResultSet.next()) {
@@ -123,7 +133,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                 qualifiedTableName, tableDataQuery, pageSize, currentlyImportedRowCount);
         try{
             return JdbcPageStreamer.streamPages(
-                    sqlDataSource,
+                    getConnection(),
                     tableDataQuery,
                     pageSize,
                     calculateTableDataParameters(currentlyImportedRowCount, maxRowsToImport),
@@ -155,7 +165,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     private int getTableRowCount(Datatable datatable){
         String tableName = datatable.getOriginalTableName();
-        try (Connection connection = sqlDataSource.getConnection()) {
+        try (Connection connection = getConnection()) {
             return tryFastCount(connection, tableName);
         } catch (SQLException fastEx) {
             LOGGER.warn(
@@ -163,7 +173,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                     tableName,
                     fastEx.getMessage()
             );
-            try (Connection connection = sqlDataSource.getConnection()) {
+            try (Connection connection = getConnection()) {
                 return trySlowCount(connection, tableName);
             } catch (SQLException slowEx) {
                 throw new RowbotDBReadException(
@@ -213,7 +223,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     }
 
     public List<ExternalColumnDescription> getExternalColumnListFromTable(Datatable datatable){
-        try(Connection connection = sqlDataSource.getConnection();
+        try(Connection connection = getConnection();
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(getEmptyResultQuery(getQualifiedTableName(datatable.getOriginalTableName())))) {
             ResultSetMetaData md = rs.getMetaData();
@@ -247,7 +257,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         List<ExternalRelationRow> results = new ArrayList<>();
         String relationsQuery = getRelationsQuery();
         LOGGER.debug("Running relations query: {}",relationsQuery);
-        try (Connection connection = sqlDataSource.getConnection();
+        try (Connection connection = getConnection();
              Statement statement = connection.createStatement();
              ResultSet rs = statement.executeQuery(relationsQuery)) {
 
@@ -276,7 +286,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
     public List<ExternalPrimaryKeyDescription> getPrimaryKeys(){
         String findPrimeryKeysQuery = getPrimaryKeysQuery();
         LOGGER.debug("Running primary keys query: {}",findPrimeryKeysQuery);
-        try(Connection connection = sqlDataSource.getConnection();
+        try(Connection connection = getConnection();
             Statement statement = connection.createStatement();
             ResultSet rs = statement.executeQuery(getPrimaryKeysQuery())){
             ResultSetMetaData md = rs.getMetaData();
