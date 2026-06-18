@@ -10,7 +10,6 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ExternalDBImporterFactory;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers.ExternalDBImporter;
 
-import com.imatia.implatform.rowbot2.data.importer.infrastructure.core.multitenancy.context.datasource.DataSourceConnectionSettings;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
     DatasourceCRUDService datasourceCRUDService;
 
     @Autowired
-    IRowbot2RestClient rowbot2ApplicationService;
+    IRowbot2RestClient rowbot2RestClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
@@ -86,7 +85,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
     }
 
     private void updateDatasourceStatus(Long datasourceId, DatasourceStatus status, String statusDetail, Integer lastImportedPage) {
-        rowbot2ApplicationService.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
+        rowbot2RestClient.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
     }
 
 }

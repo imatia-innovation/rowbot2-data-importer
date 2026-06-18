@@ -21,8 +21,4 @@ public class DatacolumnServiceImpl extends AbstractCRUDServiceImpl<Datacolumn, D
 				.map(this::fromDBO);
 	}
 
-	@Override
-	public void updateSample(Long datatableId, String datacolumnName, String columnSample) {
-		repo.updateDatacolumnSample(datatableId, datacolumnName, columnSample);
-	}
 }

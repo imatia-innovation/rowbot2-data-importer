@@ -54,6 +54,8 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     protected abstract String getDefaultSchema();
 
+    protected abstract
+
     protected abstract DataSource buildDataSource() ;
 
     public AbstractJDBCImporter(Datasource datasource) {
