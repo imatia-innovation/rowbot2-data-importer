@@ -5,7 +5,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import jakarta.persistence.*;
-import java.util.Set;
 
 @Entity(name = "datacolumn")
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
@@ -18,7 +17,5 @@ public class DatacolumnDBO extends BaseDatabaseEntity {
 	private String name;
 	@Column(name = "datatableid", insertable = false, updatable = false, nullable = false)
 	private Long datatableId;
-	@ManyToMany(mappedBy = "datacolumns")
-	private Set<AttributeDBO> attributes;
 	private String sampleData;
 }

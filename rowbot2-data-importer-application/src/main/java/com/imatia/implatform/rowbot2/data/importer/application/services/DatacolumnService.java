@@ -9,5 +9,4 @@ public interface DatacolumnService extends CRUDService<Datacolumn, Long> {
 
 	Optional<Datacolumn> findByDatatableIdAndName(Long datatableId, String name);
 
-	void updateSample(Long datatableId, String datacolumnName, String columnSample);
 }

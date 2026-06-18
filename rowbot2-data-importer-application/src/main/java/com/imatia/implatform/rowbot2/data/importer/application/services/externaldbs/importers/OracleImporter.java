@@ -33,6 +33,7 @@ public class OracleImporter extends AbstractJDBCImporter{
             oracleDatasource.setURL(url);
             oracleDatasource.setUser(datasource.getUsername());
             oracleDatasource.setPassword(datasource.getPass());
+            oracleDatasource.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
             return oracleDatasource;
         } catch (SQLException e) {
             LOGGER.error("Error creating ORACLE Datasource: [{}], Username: {}, Password: {}",
@@ -42,7 +43,10 @@ public class OracleImporter extends AbstractJDBCImporter{
     }
 
     @Override
-    protected String getTableQuery(String qualifiedTableName) {
+    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
+        if(hasQueryLimit(maxRowsToImport)){
+            return "SELECT * FROM " + qualifiedTableName + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        }
         return "SELECT * FROM " + qualifiedTableName + " OFFSET ? ROWS";
     }
 
@@ -72,7 +76,12 @@ public class OracleImporter extends AbstractJDBCImporter{
         return "SELECT NUM_ROWS AS " + ROW_COUNT_ALIAS + " " +
                 "FROM ALL_TABLES " +
                 "WHERE UPPER(OWNER) = '" + schema.toUpperCase() + "' " +
-                "AND UPPER(TABLE_NAME) = '" + originalTableName.toUpperCase() + "';";
+                "AND UPPER(TABLE_NAME) = '" + getQualifiedTableName(originalTableName) + "'";
+    }
+
+    protected String getSlowRowCountQuery(String originalTableName) {
+        return "SELECT COUNT(*) AS " + ROW_COUNT_ALIAS + " " +
+                "FROM " + getQualifiedTableName(originalTableName) ;
     }
 
     @Override
@@ -164,44 +173,28 @@ public class OracleImporter extends AbstractJDBCImporter{
         }
     }
 
-    protected List<ExternalRelation> resultToExternalRelationList(List<Map<String, ?>> results) {
-        return results.stream()
-                .collect(Collectors.groupingBy(row -> row.get("CONSTRAINT_NAME")))
-                .entrySet()
-                .stream()
-                .map(constraintRows -> ExternalRelation.builder()
-                        .originalConstraintId((String) constraintRows.getKey())
-                        .constraintName(constraintRows.getValue().get(0).get("CONSTRAINT_NAME").toString())
-                        .tableName(constraintRows.getValue().get(0).get("TABLE_NAME").toString())
-                        .foreignTableName(constraintRows.getValue().get(0).get("R_TABLE_NAME").toString())
-                        .columnNames(constraintRows.getValue().stream()
-                                .map(row -> row.get("COLUMN_NAME").toString())
-                                .collect(Collectors.toList()))
-                        .foreignColumnNames(constraintRows.getValue().stream()
-                                .map(row -> row.get("R_COLUMN_NAME").toString())
-                                .collect(Collectors.toList()))
-                        .build())
-                .collect(Collectors.toList());
-    }
     @Override
     protected String getRelationsQuery() {
         return "SELECT\n" +
-                "                c.constraint_name,\n" +
-                "                c.table_name,\n" +
-                "                cc.column_name,\n" +
-                "                r.table_name AS r_table_name,\n" +
-                "                rcc.column_name AS r_column_name,\n" +
-                "                c.constraint_name AS constraint_id\n" +
-                "            FROM user_constraints c\n" +
-                "            JOIN user_cons_columns cc\n" +
-                "                ON c.constraint_name = cc.constraint_name\n" +
-                "            JOIN user_constraints r\n" +
-                "                ON c.r_constraint_name = r.constraint_name\n" +
-                "            JOIN user_cons_columns rcc\n" +
-                "                ON r.constraint_name = rcc.constraint_name\n" +
-                "               AND cc.position = rcc.position\n" +
-                "            WHERE c.constraint_type = 'R'\n" +
-                "            ORDER BY c.constraint_name, cc.position";
+                "    c.constraint_name AS " + CONSTRAINT_NAME_ALIAS + ",\n" +
+                "    c.table_name AS " + TABLE_NAME_ALIAS + ",\n" +
+                "    cc.column_name AS " + COLUMN_NAME_ALIAS + ",\n" +
+                "    r.table_name AS " + FOREIGN_TABLE_NAME_ALIAS + ",\n" +
+                "    rcc.column_name AS " + FOREIGN_COLUMN_NAME_ALIAS + "\n" +
+                "FROM all_constraints c\n" +
+                "JOIN all_cons_columns cc\n" +
+                "    ON c.constraint_name = cc.constraint_name\n" +
+                "   AND c.owner = cc.owner\n" +
+                "JOIN all_constraints r\n" +
+                "    ON c.r_constraint_name = r.constraint_name\n" +
+                "   AND c.r_owner = r.owner\n" +
+                "JOIN all_cons_columns rcc\n" +
+                "    ON r.constraint_name = rcc.constraint_name\n" +
+                "   AND r.owner = rcc.owner\n" +
+                "   AND cc.position = rcc.position\n" +
+                "WHERE c.constraint_type = 'R'\n" +
+                "  AND c.owner = '" + getSchema() + "' \n" +
+                "ORDER BY c.constraint_name, cc.position";
     }
 }
 

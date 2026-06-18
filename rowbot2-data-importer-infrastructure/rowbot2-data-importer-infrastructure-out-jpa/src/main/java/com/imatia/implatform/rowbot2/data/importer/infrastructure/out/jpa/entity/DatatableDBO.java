@@ -23,7 +23,5 @@ public class DatatableDBO extends BaseDatabaseEntity {
 	private List<DatacolumnDBO> columns;
 	@Column(name="datasourceid", insertable = false, updatable = false)
 	private Long datasourceId;
-	@ManyToMany(mappedBy = "tables", cascade = {CascadeType.DETACH})
-	private Set<EntityDBO> entities;
 	private Long pkDatacolumnId;
 }

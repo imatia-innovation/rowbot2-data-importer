@@ -1,12 +1,30 @@
 components:
   responses:
+
     BadRequest:
       description: Bad request
-    NoContent:
-      description: No content
-    NotFound:
-      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ErrorResponseDTO'
+
     Unauthorized:
       description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ErrorResponseDTO'
+
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ErrorResponseDTO'
+
     Unexpected:
       description: Unexpected error
+      content:
+        application/json:
+          schema:
+            $ref: '../components/schemas.yml#/components/schemas/ErrorResponseDTO'

@@ -18,7 +18,6 @@ import java.util.List;
 
 public class PostgresImporter extends AbstractJDBCImporter {
 	private static final String DEFAULT_SCHEMA = "public";
-	private static final String TABLE_NAME_ALIAS = "tableName";
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(PostgresImporter.class);
 	public PostgresImporter(Datasource datasource) {
@@ -33,9 +32,8 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		postgresDatasource.setUser(datasource.getUsername());
 		postgresDatasource.setPassword(datasource.getPass());
 		postgresDatasource.setDatabaseName(datasource.getDbname());
-		if(datasource.getSchema()!=null){
-			postgresDatasource.setCurrentSchema(datasource.getSchema());
-		}
+		postgresDatasource.setCurrentSchema(getSchema());
+		postgresDatasource.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
 		return postgresDatasource;
 	}
 
@@ -43,24 +41,32 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		return PostgresqlUtils.escapeIdentifier(identifier);
 	}
 
-	protected String getTableQuery(String qualifiedTableName){
+	protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport){
+		if(hasQueryLimit(maxRowsToImport)){
+			return "SELECT * FROM " + qualifiedTableName + " OFFSET ? LIMIT ?";
+		}
 		return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
 	}
 
 	protected String getRelationsQuery(){
-		return "SELECT con.oid, " +
-				"	con.conname, " +
-				"	rel.relname as \"ftable\", " +
-				"	attr.attname as \"fcolumn_name\", " +
-				"	frel.relname as \"table\", " +
-				"	fattr.attname as \"column_name\", " +
-				"	con.contype " +
-				"FROM pg_catalog.pg_constraint con" +
-				"	INNER JOIN pg_catalog.pg_class rel ON rel.oid = con.conrelid" +
-				"	INNER JOIN pg_catalog.pg_namespace nsp ON nsp.oid = connamespace" +
-				"	INNER JOIN pg_catalog.pg_class frel on frel.oid = con.confrelid" +
-				"	INNER JOIN pg_catalog.pg_attribute attr on rel.oid = attr.attrelid and attr.attnum = ANY (con.conkey)" +
-				"	INNER JOIN pg_catalog.pg_attribute fattr on frel.oid = fattr.attrelid and fattr.attnum = any (con.confkey)";
+		return "SELECT\n" +
+				"    con.conname AS " + CONSTRAINT_NAME_ALIAS + ",\n" +
+				"    rel.relname AS " + TABLE_NAME_ALIAS + ",\n" +
+				"    attr.attname AS " + COLUMN_NAME_ALIAS + ",\n" +
+				"    frel.relname AS " + FOREIGN_TABLE_NAME_ALIAS + ",\n" +
+				"    fattr.attname AS " + FOREIGN_COLUMN_NAME_ALIAS + "\n" +
+				"FROM pg_catalog.pg_constraint con\n" +
+				"JOIN pg_catalog.pg_class rel\n" +
+				"    ON rel.oid = con.conrelid\n" +
+				"JOIN pg_catalog.pg_class frel\n" +
+				"    ON frel.oid = con.confrelid\n" +
+				"JOIN pg_catalog.pg_attribute attr\n" +
+				"    ON attr.attrelid = rel.oid\n" +
+				"   AND attr.attnum = ANY (con.conkey)\n" +
+				"JOIN pg_catalog.pg_attribute fattr\n" +
+				"    ON fattr.attrelid = frel.oid\n" +
+				"   AND fattr.attnum = ANY (con.confkey)\n" +
+				"WHERE con.contype = 'f';";
 	}
 
 	protected String getPrimaryKeysQuery(){
@@ -90,19 +96,37 @@ public class PostgresImporter extends AbstractJDBCImporter {
 	@Override
 	protected String getRowCountQuery(String originalTableName) {
 		String schema = this.getSchema();
-		return "SELECT c.reltuples AS " + ROW_COUNT_ALIAS + " " +
-				"FROM pg_class c " +
-				"JOIN pg_namespace n ON n.oid = c.relnamespace " +
-				"WHERE UPPER(n.nspname) = UPPER('" + schema + "') " +
-				"AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
-				"AND c.relkind IN ('r', 'p');";
+
+		return "SELECT SUM(partialcount) as  " + ROW_COUNT_ALIAS + " " +
+				"FROM ( " +
+				"	SELECT c.reltuples AS partialcount " +
+				"	FROM pg_class c " +
+				" 	JOIN pg_namespace n ON n.oid = c.relnamespace " +
+				"	WHERE UPPER(n.nspname) = UPPER('"+ schema +"') " +
+				"	AND UPPER(c.relname) = UPPER('" + originalTableName + "') " +
+				"	AND c.relkind IN ('r') " +
+				"UNION ALL " +
+				"	SELECT c.reltuples AS partialcount " +
+				"	FROM pg_class c " +
+				"	JOIN pg_inherits i ON i.inhrelid = c.oid " +
+				"	JOIN pg_class parent ON parent.oid = i.inhparent " +
+				"	JOIN pg_namespace pn ON pn.oid = parent.relnamespace " +
+				"	WHERE UPPER(pn.nspname) = UPPER('"+ schema +"') " +
+				"	AND UPPER(parent.relname) = UPPER('" + originalTableName + "') " +
+				"	and c.relkind in ('p') " +
+				")partialCounts;";
+	}
+
+	protected String getSlowRowCountQuery(String originalTableName) {
+		return "SELECT COUNT(*) AS " + ROW_COUNT_ALIAS + " " +
+				"FROM " + getQualifiedTableName(originalTableName) + ";";
 	}
 
 	@Override
 	public List<String> getTableNames(List<String> tablesWhiteList) {
 		List<String> tableNames = new ArrayList<>();
 
-		try(Connection connection = sqlDataSource.getConnection();
+		try(Connection connection = getConnection();
 				PreparedStatement statement = getTableNamesQueryPreparedStatement(connection);
 				ResultSet rs = statement.executeQuery()
 		){
@@ -124,7 +148,7 @@ public class PostgresImporter extends AbstractJDBCImporter {
 	}
 
 	private String getTableNamesQuery(){
-		return "SELECT relname AS tableName " +
+		return "SELECT relname AS " + TABLE_NAME_ALIAS + " " +
 				"FROM pg_catalog.pg_class c " +
 				"INNER JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace " +
 				"WHERE c.relkind in ('r', 'p') " +

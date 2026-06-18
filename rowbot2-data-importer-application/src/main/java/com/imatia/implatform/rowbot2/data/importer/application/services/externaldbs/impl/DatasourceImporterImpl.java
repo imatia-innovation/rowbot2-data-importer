@@ -1,6 +1,7 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.impl;
 
 import com.imatia.implatform.rowbot2.data.importer.application.services.*;
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.ConnectionValidator;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.IdNotExistentOnDBException;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.exception.RowbotRuntimeException;
@@ -27,6 +28,9 @@ public class DatasourceImporterImpl implements DatasourceImporter {
     DataImporter dataImporter;
 
     @Autowired
+    ConnectionValidator connectionValidator;
+
+    @Autowired
     RelationsImporter relationsImporter;
 
     @Autowired
@@ -42,7 +46,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
     DatasourceCRUDService datasourceCRUDService;
 
     @Autowired
-    IRowbot2RestClient rowbot2ApplicationService;
+    IRowbot2RestClient rowbot2RestClient;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DatasourceImporterImpl.class);
 
@@ -56,7 +60,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
                     .orElseThrow(() -> new IdNotExistentOnDBException("Datasource with id " + datasourceId + " does not exist on DB"));
             updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Checking connection", null);
 
-            String connectionError = checkConnection(datasource);
+            String connectionError = connectionValidator.checkConnection(datasource);
             if (StringUtils.hasText(connectionError)) {
                 throw new RowbotRuntimeException(
                         "There was an error trying to connect to the datasource, Error: " + connectionError);
@@ -76,20 +80,12 @@ public class DatasourceImporterImpl implements DatasourceImporter {
             relationsImporter.importRelations(datasource, externalDBImporter);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
-            this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "ERROR", e.getMessage());
-            return;
+            throw e;
         }
-        LOGGER.info("DS with id: {} data read completed.", datasourceId);
-        this.rowbot2ApplicationService.externalDataSourceImportCallback(datasourceId, "OK", null);
-        LOGGER.info("DS with Id: {} import finished.", datasourceId);
-    }
-
-    private String checkConnection(Datasource datasource) {
-        return externalDBImporterFactory.create(datasource).checkConnection();
     }
 
     private void updateDatasourceStatus(Long datasourceId, DatasourceStatus status, String statusDetail, Integer lastImportedPage) {
-        rowbot2ApplicationService.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
+        rowbot2RestClient.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
     }
 
 }

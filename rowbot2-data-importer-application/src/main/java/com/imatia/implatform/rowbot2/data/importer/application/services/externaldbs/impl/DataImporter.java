@@ -42,8 +42,7 @@ public class DataImporter {
         LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
         datasource.getTables().stream()
                 .sorted(Comparator.comparing(Datatable::getOriginalTableName))
-                .filter(datatable-> !datatable.getOriginalTableName().equals("fact_prem_trans") &&
-                        (datasource.getLastImportedTableName()==null ||
+                .filter(datatable-> (datasource.getLastImportedTableName()==null ||
                                 datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
                 .forEach(datatable ->{
                     importOriginalDatatable(datasource, externalDBImporter, datatable,datasource.getTables().indexOf(datatable),datasource.getTables().size());
@@ -58,13 +57,14 @@ public class DataImporter {
         Integer pageSize = Objects.nonNull(datasource.getPageSize()) && datasource.getPageSize() >0 ? datasource.getPageSize() : PAGE_SIZE;
 
         ExternalTableDescription externalTableDescription = externalDBImporter.getExternalTableDescription(datatable);
-        int totalPages = calculatePages(externalTableDescription.getContentRowSize(),pageSize);
-
         ImportStatus importStatus = initializeImportStatus(datasource, datatable, externalTableDescription, pageSize);
+
+        long totalPages = calculatePages(externalTableDescription.getContentRowSize(),datasource.getMaxRows(),importStatus.getAlreadyImportedRows(),pageSize);
+
         ImportProcessManager importProcessManager = new ImportProcessManager();
         importProcessManager.executeWithRetry(importStatus,(s) -> {
             try (Stream<DbReadChunk<Map<String, ?>>> contentStream =
-                         externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), pageSize, importStatus.getNextPageIndex())) {
+                         externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), datasource.getMaxRows(), pageSize, importStatus.getNextPageIndex())) {
 
                 for (DbReadChunk<Map<String, ?>> dbReadChunk : (Iterable<DbReadChunk<Map<String, ?>>>) contentStream::iterator) {
                     LOGGER.debug("DS({}): {}, Table: {} ({} of {}), Page {} of {} - inserting...",
@@ -84,6 +84,8 @@ public class DataImporter {
             }
         });
     }
+
+
 
 
     private boolean isFirstPageOfTable(ImportStatus importStatus) {
@@ -113,13 +115,17 @@ public class DataImporter {
         LOGGER.debug("Page inserted.");
     }
 
-    private static int calculatePages(int totalRows, int pageSize) {
-        int pages = totalRows / pageSize;
-        if (totalRows % pageSize != 0) {
+    private long calculatePages(int totalRows, Integer maxRowsToImport, long alreadyImportedRows, int pageSize) {
+        int totalRowsToImport = maxRowsToImport == null?
+                totalRows:
+                Math.min(totalRows, maxRowsToImport);
+        long rowsToImport = Math.max(0,
+                totalRowsToImport - alreadyImportedRows);
+        long pages = rowsToImport / pageSize;
+        if (rowsToImport % pageSize != 0) {
             pages++;
         }
         return pages;
     }
-
 
 }

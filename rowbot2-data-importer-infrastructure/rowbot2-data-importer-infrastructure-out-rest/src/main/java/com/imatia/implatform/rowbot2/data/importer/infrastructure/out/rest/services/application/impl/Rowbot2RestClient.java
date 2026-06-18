@@ -27,7 +27,7 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   private final String ROWBOT2_APPLICATION_PROTOCOL_KEY = "${rowbot2-application.server.protocol}";
   private final String ROWBOT2_APPLICATION_PORT_KEY = "${rowbot2-application.server.port}";
   private final String UPDATE_DATASOURCE_PATH = "/datasource/importer/callbackExternalDatasourceImport";
-  private final String UPDATE_DATASOURCE_STATUS_PATH = "/ds/updateStatus";
+  private final String UPDATE_DATASOURCE_STATUS_PATH = "/datasource/importer/updateStatus";
   private final String DATASOURCE_CONTENT_TYPE = "application/json;charset=UTF-8";
 
   @Value(ROWBOT2_APPLICATION_HOST_KEY)
@@ -93,15 +93,15 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   }
 
   private HttpRequest buildUpdateRequest(Long datasourceId, String status, String errorMessage) throws JsonProcessingException, URISyntaxException {
-    String body = buildCallbackBody(datasourceId, status, errorMessage);
-    return buildRequest(UPDATE_DATASOURCE_STATUS_PATH + "/" + datasourceId, body);
+    String body = buildUpdateBody(datasourceId, status, errorMessage);
+    return buildRequest(UPDATE_DATASOURCE_STATUS_PATH, body);
   }
 
   private String buildUpdateBody(Long datasourceId, String status, String statusDetail)
           throws JsonProcessingException {
     ObjectMapper objectMapper = new ObjectMapper();
-    Map<String, Object> requestMap = new HashMap<>(Map.of("status", datasourceId,
-            "message", status,
+    Map<String, Object> requestMap = new HashMap<>(Map.of("datasourceId", datasourceId,
+            "importStatus", status,
             "callbackToken", TenantContext.get().callbackToken(),
             "errorMessage", statusDetail));
     return objectMapper.writeValueAsString(requestMap);

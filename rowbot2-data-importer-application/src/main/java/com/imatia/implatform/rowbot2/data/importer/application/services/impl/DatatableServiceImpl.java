@@ -15,8 +15,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class DatatableServiceImpl extends AbstractCRUDServiceImpl<Datatable, DatatableDBO, DatatableRepository> implements DatatableService {
-	@Autowired
-	PermissionService permissionService;
 
 	@Override
 	public Optional<Datatable> read(final Long datatableId) {
