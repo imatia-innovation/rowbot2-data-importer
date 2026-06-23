@@ -54,9 +54,13 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
 
     protected abstract String getDefaultSchema();
 
-    protected abstract
-
     protected abstract DataSource buildDataSource() ;
+
+    protected abstract String getRowCountQuery(String originalTableName);
+
+    protected abstract String getSlowRowCountQuery(String originalTableName);
+
+    protected abstract String getPaginationQuery(Long offset, Long limit);
 
     public AbstractJDBCImporter(Datasource datasource) {
         this.datasource = datasource;
@@ -123,14 +127,10 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         }
     }
 
-    protected abstract String getRowCountQuery(String originalTableName);
-
-    protected abstract String getSlowRowCountQuery(String originalTableName);
-
     @Override
-    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Integer maxRowsToImport, Integer pageSize, int startingPageIndex){
+    public Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Long maxRowsToImport, Integer pageSize, int startingPageIndex){
         String qualifiedTableName = getQualifiedTableName(datatable.getOriginalTableName());
-        String tableDataQuery = getTableQuery(qualifiedTableName, maxRowsToImport);
+        String tableDataQuery = getTableQuery(qualifiedTableName, currentlyImportedRowCount, maxRowsToImport);
         LOGGER.debug("Getting data from table {} using query: {}, blockSize {}, offset: {}",
                 qualifiedTableName, tableDataQuery, pageSize, currentlyImportedRowCount);
         try{
@@ -138,7 +138,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                     getConnection(),
                     tableDataQuery,
                     pageSize,
-                    calculateTableDataParameters(currentlyImportedRowCount, maxRowsToImport),
+                    buildPaginationParameters(currentlyImportedRowCount, maxRowsToImport),
                     startingPageIndex
             );
         }catch(SQLException e){
@@ -146,14 +146,17 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         }
     }
 
-    @NotNull
-    private List<TypedStatementParameter> calculateTableDataParameters(Long currentlyImportedRowCount, Integer maxRowsToImport) {
-        return hasQueryLimit(maxRowsToImport)?
+    protected String getTableQuery(String qualifiedTableName, Long offset, Long limit) {
+        return "SELECT * FROM " + qualifiedTableName + getPaginationQuery(offset,limit);
+    }
 
-                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount),
-                        new TypedStatementParameter(Types.BIGINT, maxRowsToImport - currentlyImportedRowCount)):
+    protected List<TypedStatementParameter> buildPaginationParameters(Long offset, Long limit) {
+        return hasQueryLimit(limit)?
 
-                List.of(new TypedStatementParameter(Types.BIGINT, currentlyImportedRowCount));
+                List.of(new TypedStatementParameter(Types.BIGINT, offset),
+                        new TypedStatementParameter(Types.BIGINT, limit - offset)):
+
+                List.of(new TypedStatementParameter(Types.BIGINT, offset));
     }
 
 
@@ -161,9 +164,6 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         return "SELECT * FROM "+ qualifiedTableName +
                 " WHERE 1=0";
     }
-
-    protected abstract String getTableQuery(String qualifiedTableName, Integer maxRowsToImport);
-
 
     private int getTableRowCount(Datatable datatable){
         String tableName = datatable.getOriginalTableName();
@@ -362,7 +362,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         return !StringUtils.hasText(datasource.getSchema()) ? getDefaultSchema() : datasource.getSchema();
     }
 
-    protected boolean hasQueryLimit(Integer maxRowsToImport){
+    protected boolean hasQueryLimit(Long maxRowsToImport){
        return (maxRowsToImport!=null && maxRowsToImport>=0);
     }
 

@@ -43,11 +43,11 @@ public class OracleImporter extends AbstractJDBCImporter{
     }
 
     @Override
-    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
-        if(hasQueryLimit(maxRowsToImport)){
-            return "SELECT * FROM " + qualifiedTableName + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+    protected String getPaginationQuery(Long limit, Long offset) {
+        if(hasQueryLimit(limit)){
+            return " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
-        return "SELECT * FROM " + qualifiedTableName + " OFFSET ? ROWS";
+        return " OFFSET ? ROWS";
     }
 
     @Override

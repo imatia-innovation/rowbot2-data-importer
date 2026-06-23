@@ -19,7 +19,7 @@ public interface ExternalDBImporter {
 
 	List<String> getColumnsNames(String tableName) throws SQLException;
 
-	Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Integer maxRowsToImport, Integer pageSize, int startingPageIndex);
+	Stream<DbReadChunk<Map<String, ?>>> getTableDataPaged(Datatable datatable, Long currentlyImportedRowCount, Long maxRowsToImport, Integer pageSize, int startingPageIndex);
 
 	ExternalTableDescription getExternalTableDescription(Datatable datatable);
 

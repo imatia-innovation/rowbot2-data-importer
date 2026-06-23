@@ -32,6 +32,6 @@ public class Datasource extends BaseDomainObject {
 	Integer lastImportedPageIndex;
 	String schema;
 	Integer pageSize;
-	Integer maxRows;
+	Long maxRows;
 	List<String> tablesWhiteList;
 }

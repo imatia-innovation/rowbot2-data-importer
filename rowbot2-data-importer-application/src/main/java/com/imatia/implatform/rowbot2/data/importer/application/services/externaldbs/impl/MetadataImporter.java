@@ -38,7 +38,7 @@ public class MetadataImporter {
     private int MAX_SAMPLES_PER_COLUMN;
 
     @Value(MAX_SAMPLE_LENGTH_CONFIG_KEY)
-    private int MAX_SAMPLE_LENGTH;
+    private Integer MAX_SAMPLE_LENGTH;
 
     @Autowired
     DatatableService datatableService;
@@ -106,7 +106,7 @@ public class MetadataImporter {
             Stream<DbReadChunk<Map<String,?>>> currentTableSampleData = externalDBImporter.getTableDataPaged(
                     Datatable.builder().originalTableName(tableName).build(),
                     0L,
-                    MAX_SAMPLE_LENGTH,
+                    MAX_SAMPLE_LENGTH.longValue(),
                     MAX_SAMPLE_LENGTH,
                     0);
             DbReadChunk<Map<String,?>> dbReadChunk = processTableDataStream(currentTableSampleData, tableName);
