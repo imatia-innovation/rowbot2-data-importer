@@ -1,6 +1,7 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.impl;
 
 import com.imatia.implatform.rowbot2.data.importer.application.services.DatasourceCRUDService;
+import com.imatia.implatform.rowbot2.data.importer.application.services.DatatableService;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers.ExternalDBImporter;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.DbReadChunk;
 import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importprocess.ImportProcessManager;
@@ -35,6 +36,9 @@ public class DataImporter {
 
     @Autowired
     private DatasourceCRUDService datasourceCRUDService;
+
+    @Autowired
+    private DatatableService datatableService;
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DataImporter.class);
 
@@ -81,6 +85,10 @@ public class DataImporter {
                     importStatus.setAlreadyImportedRows(importStatus.getAlreadyImportedRows() + dbReadChunk.getTotalItems());
                     importStatus.setNextPageIndex(importStatus.getNextPageIndex() +1);
                 }
+                datatableService.update(
+                        datatable.toBuilder()
+                            .rowsCount(importStatus.getAlreadyImportedRows())
+                        .build());
             }
         });
     }
