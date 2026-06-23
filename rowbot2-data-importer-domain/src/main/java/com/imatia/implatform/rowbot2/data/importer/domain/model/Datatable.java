@@ -21,4 +21,5 @@ public class Datatable extends BaseDomainObject {
 	List<Datacolumn> columns;
 	@JsonIgnore
 	Long pkDatacolumnId;
+	Long rowsCount;
 }

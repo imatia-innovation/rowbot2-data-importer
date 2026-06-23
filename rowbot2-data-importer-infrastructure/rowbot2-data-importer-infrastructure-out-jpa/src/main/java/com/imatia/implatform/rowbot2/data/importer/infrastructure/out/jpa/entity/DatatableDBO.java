@@ -24,4 +24,5 @@ public class DatatableDBO extends BaseDatabaseEntity {
 	@Column(name="datasourceid", insertable = false, updatable = false)
 	private Long datasourceId;
 	private Long pkDatacolumnId;
+	private Integer rowsCount;
 }
