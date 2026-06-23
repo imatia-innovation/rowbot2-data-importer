@@ -1,5 +1,6 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers;
 
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.util.TypedStatementParameter;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
@@ -7,7 +8,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
+import java.sql.Types;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 
 public class MysqlImporter extends AbstractJDBCImporter {
@@ -49,13 +52,22 @@ public class MysqlImporter extends AbstractJDBCImporter {
         return "`" + tableName + "`";
     }
 
-    @Override
-    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
-        if(hasQueryLimit(maxRowsToImport)){
-            return "SELECT * FROM " + qualifiedTableName + " LIMIT ? OFFSET ?";
+    protected String getPaginationQuery(Long offset, Long limit) {
+        if(hasQueryLimit(limit)){
+            return " LIMIT ? OFFSET ?";
         }
-        return "SELECT * FROM " + qualifiedTableName + " LIMIT 18446744073709551615 OFFSET ?";
+        return " LIMIT 18446744073709551615 OFFSET ?";
 
+    }
+
+    @Override
+    protected List<TypedStatementParameter> buildPaginationParameters(Long offset, Long limit) {
+        return hasQueryLimit(limit)?
+
+                List.of(new TypedStatementParameter(Types.BIGINT, limit - offset),
+                        new TypedStatementParameter(Types.BIGINT, offset)):
+
+                List.of(new TypedStatementParameter(Types.BIGINT, offset));
     }
 
     @Override

@@ -1,9 +1,11 @@
 package com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.importers;
 
+import com.imatia.implatform.rowbot2.data.importer.application.services.externaldbs.util.TypedStatementParameter;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.microsoft.sqlserver.jdbc.SQLServerDataSource;
 
 import javax.sql.DataSource;
+import java.util.List;
 import java.util.Locale;
 
 public class MssqlImporter extends AbstractJDBCImporter {
@@ -29,12 +31,11 @@ public class MssqlImporter extends AbstractJDBCImporter {
         return "[" + identifier + "]";
     }
 
-    @Override
-    protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport) {
-        if(hasQueryLimit(maxRowsToImport)){
-            return "SELECT * FROM " + qualifiedTableName + " ORDER BY (SELECT NULL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+    protected String getPaginationQuery(Long offset, Long limit) {
+        if(hasQueryLimit(limit)){
+            return " ORDER BY (SELECT NULL) OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
         }
-        return "SELECT * FROM " + qualifiedTableName + " ORDER BY (SELECT NULL) OFFSET ? ROWS";
+        return  " ORDER BY (SELECT NULL) OFFSET ? ROWS";
     }
 
     public String getRowCountQuery(String originalTableName) {

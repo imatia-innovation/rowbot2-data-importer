@@ -41,11 +41,11 @@ public class PostgresImporter extends AbstractJDBCImporter {
 		return PostgresqlUtils.escapeIdentifier(identifier);
 	}
 
-	protected String getTableQuery(String qualifiedTableName, Integer maxRowsToImport){
-		if(hasQueryLimit(maxRowsToImport)){
-			return "SELECT * FROM " + qualifiedTableName + " OFFSET ? LIMIT ?";
+	protected String getPaginationQuery(Long offset, Long limit) {
+		if(hasQueryLimit(limit)){
+			return " OFFSET ? LIMIT ?";
 		}
-		return "SELECT * FROM " + qualifiedTableName + " OFFSET ?";
+		return " OFFSET ?";
 	}
 
 	protected String getRelationsQuery(){
