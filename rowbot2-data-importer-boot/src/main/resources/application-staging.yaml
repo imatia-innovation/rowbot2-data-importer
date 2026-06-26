@@ -4,6 +4,15 @@ logging:
   level:
     com.imatia: DEBUG
     org.springframework.boot.autoconfigure: INFO
+  file:
+    name: /opt/rowbot2-data-importer/logs/rowbot2-data-importer.log
+
+
+  logback:
+    rollingpolicy:
+      max-file-size: 100MB
+      max-history: 30
+      file-name-pattern: /opt/rowbot2-data-importer/logs/rowbot2-data-importer-%d{yyyy-MM-dd}.%i.log.gz
 management:
   security:
     enabled: false
