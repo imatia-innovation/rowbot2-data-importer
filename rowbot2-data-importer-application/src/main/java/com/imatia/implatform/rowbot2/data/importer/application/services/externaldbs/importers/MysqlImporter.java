@@ -72,11 +72,10 @@ public class MysqlImporter extends AbstractJDBCImporter {
 
     @Override
     public String getRowCountQuery(String originalTableName) {
-        String qualifiedTableName = getQualifiedTableName(originalTableName);
         return "SELECT table_rows as " + ROW_COUNT_ALIAS + "\n" +
                 "FROM information_schema.tables\n" +
                 "WHERE table_schema = DATABASE()\n" +
-                "  AND table_name = '" + qualifiedTableName + "';";
+                "  AND table_name = '" + originalTableName + "';";
     }
 
     public String getSlowRowCountQuery(String originalTableName) {
