@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
   ## provided as basic setup. replace as needed
   repository: 179934523585.dkr.ecr.eu-west-3.amazonaws.com/rowbot2-data-importer
-  version: pre.0.0.1-SNAPSHOT.26288775910.1
+  version: pre.0.0.1-SNAPSHOT.28427057248.1
 #imagePullSecrets: ["ecr-cred"] # uncomment to use when not aws clusters. Secret will be provided
 nameOverride: ""
 fullnameOverride: ""
@@ -82,13 +82,11 @@ service:
   externalPort: 80
   internalPort: 8080 # must match your application port
 ingress:
-  enabled: false
-    # annotations:
-    #  kubernetes.io/ingress.class: nginx   ## comment to deploy when not in aws clusters
-    #  kubernetes.io/tls-acme: "true" ## comment to deploy when not in aws clusters
-    #  cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53 # use cert-manager-letsencrypt-staging-route53 for testing environments
-    # host: rowbot2-data-importer.dev.imatia.cloud # restricted to *dev.imatia.com by default in development clusters
-    #host: rowbot2-data-importer.cloud.imatia.com # uncomment this when not in AWS clusters
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53
+  host: databench-importer.try.imatia.cloud
   tls:
     #secretName: rowbot2-data-importer-tls # only customize if needed to avoid name conflicts
     enabled: false
