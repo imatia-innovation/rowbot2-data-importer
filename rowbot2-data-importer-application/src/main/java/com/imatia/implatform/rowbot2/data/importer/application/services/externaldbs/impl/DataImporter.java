@@ -44,7 +44,7 @@ public class DataImporter {
 
     public void importOriginalData(Datasource datasource, ExternalDBImporter externalDBImporter){
         LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
-        datasource.getTables().stream()
+        datatableService.findByDatasourceId(datasource.getId()).stream()
                 .sorted(Comparator.comparing(Datatable::getOriginalTableName))
                 .filter(datatable-> (datasource.getLastImportedTableName()==null ||
                                 datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
