@@ -23,14 +23,13 @@ public class MysqlImporter extends AbstractJDBCImporter {
     @Override
     protected DataSource buildDataSource() {
         MysqlDataSource ds = new MysqlDataSource();
-        String connectionUrl = datasource.getUrl() + getConfigurationVariables();
-        LOGGER.debug("Connecting using URL: {}",connectionUrl);
-        ds.setServerName(connectionUrl);
+        ds.setServerName(datasource.getUrl());
         ds.setPortNumber(datasource.getPort());
         ds.setUser(datasource.getUsername());
         ds.setPassword(datasource.getPass());
         ds.setDatabaseName(datasource.getDbname());
         try {
+            ds.setUseCursorFetch(true);
             ds.setConnectTimeout(LOGIN_ATTEMP_TIMEOUT);
             ds.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
             ds.setSocketTimeout(LOGIN_ATTEMP_TIMEOUT * 1000);
