@@ -68,15 +68,20 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 
             ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
             LOGGER.info("Deleting relations for DS {}", datasourceId);
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Removing previous relations", null);
             relationsImporter.removeRelationsOfDatasource(datasourceId);
             LOGGER.info("Importing DS {} metadata", datasourceId);
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing metadata", null);
             Datasource savedDatasource = metadataImporter.importDatasourceMetadata(datasource, externalDBImporter,
                     resumingImport);
             LOGGER.info("Importing DS {} primary Keys", datasourceId);
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing primary keys", null);
             primaryKeysImporter.importDatatablePks(savedDatasource, externalDBImporter);
             LOGGER.info("Importing DS {} data", datasourceId);
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing data.", null);
             dataImporter.importOriginalData(savedDatasource, externalDBImporter);
             LOGGER.info("Creating relations for DS {} ", datasourceId);
+            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Creating realtions", null);
             relationsImporter.importRelations(datasource, externalDBImporter);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
