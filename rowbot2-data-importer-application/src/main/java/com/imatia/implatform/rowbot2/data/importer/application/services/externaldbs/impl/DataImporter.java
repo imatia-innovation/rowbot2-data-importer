@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component
@@ -50,12 +51,14 @@ public class DataImporter {
 
     public void importOriginalData(Datasource datasource, ExternalDBImporter externalDBImporter){
         LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
-        datatableService.findByDatasourceId(datasource.getId()).stream()
+        List<Datatable> tables = datatableService.findByDatasourceId(datasource.getId()).stream()
                 .sorted(Comparator.comparing(Datatable::getOriginalTableName))
                 .filter(datatable-> (datasource.getLastImportedTableName()==null ||
                                 datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
-                .forEach(datatable ->{
-                    importOriginalDatatable(datasource, externalDBImporter, datatable,datasource.getTables().indexOf(datatable),datasource.getTables().size());
+                .toList();
+        IntStream.range(0, tables.size())
+                .forEach(i ->{
+                    importOriginalDatatable(datasource, externalDBImporter, tables.get(i),i,tables.size());
                 });
     }
 

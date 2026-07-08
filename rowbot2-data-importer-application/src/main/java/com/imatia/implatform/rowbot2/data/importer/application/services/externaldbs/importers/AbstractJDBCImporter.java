@@ -76,6 +76,11 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         return this.currentConnection;
     }
 
+    private void refreshConnection() throws SQLException{
+        this.currentConnection.close();
+        this.currentConnection = sqlDataSource.getConnection();
+    }
+
     public String checkConnection(){
         try(Connection connection = getConnection()) {
             return null;
@@ -142,6 +147,11 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                     startingPageIndex
             );
         }catch(SQLException e){
+            try {
+                refreshConnection();
+            } catch (SQLException refreshEx) {
+                LOGGER.error("Error refreshing connection after SQLException: {}", refreshEx.getMessage());
+            }
             throw new RowbotDBReadException("There was a problem trying to retrieve datatable: " + datatable.getOriginalTableName(), e);
         }
     }
