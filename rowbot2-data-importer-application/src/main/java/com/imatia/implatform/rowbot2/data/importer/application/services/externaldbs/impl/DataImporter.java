@@ -9,6 +9,7 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datatable;
+import com.imatia.implatform.rowbot2.data.importer.domain.model.enums.DatasourceStatus;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalColumnDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalTableDescription;
 import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
@@ -86,7 +87,7 @@ public class DataImporter {
                     String statusDescription = String.format("Importing table %s (%d of %d), page %d of %d",
                             datatable.getOriginalTableName(), datatableIndex, totalDatatables,
                             importStatus.getNextPageIndex(), totalPages);
-                    rowbot2RestClient.updateDatasourceImportStatus(datasource.getId(), statusDescription, datatable.getOriginalTableName());
+                    rowbot2RestClient.updateDatasourceImportStatus(datasource.getId(), DatasourceStatus.READING.getDescription(), statusDescription);
 
                     importStatus.setAlreadyImportedRows(importStatus.getAlreadyImportedRows() + dbReadChunk.getTotalItems());
                     importStatus.setNextPageIndex(importStatus.getNextPageIndex() +1);

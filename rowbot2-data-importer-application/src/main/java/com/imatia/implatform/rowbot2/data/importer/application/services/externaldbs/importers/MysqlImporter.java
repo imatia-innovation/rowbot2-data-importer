@@ -23,8 +23,9 @@ public class MysqlImporter extends AbstractJDBCImporter {
     @Override
     protected DataSource buildDataSource() {
         MysqlDataSource ds = new MysqlDataSource();
-
-        ds.setServerName(datasource.getUrl());
+        String connectionUrl = datasource.getUrl() + getConfigurationVariables();
+        LOGGER.debug("Connecting using URL: {}",connectionUrl);
+        ds.setServerName(connectionUrl);
         ds.setPortNumber(datasource.getPort());
         ds.setUser(datasource.getUsername());
         ds.setPassword(datasource.getPass());
@@ -37,6 +38,10 @@ public class MysqlImporter extends AbstractJDBCImporter {
             LOGGER.error("Error while setting connect timeout", e);
         }
         return ds;
+    }
+
+    private String getConfigurationVariables(){
+        return "?useCursorFetch=true";
     }
 
     @Override

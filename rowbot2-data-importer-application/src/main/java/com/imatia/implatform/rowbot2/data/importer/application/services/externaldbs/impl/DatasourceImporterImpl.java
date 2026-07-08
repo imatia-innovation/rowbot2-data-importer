@@ -58,7 +58,7 @@ public class DatasourceImporterImpl implements DatasourceImporter {
         try {
             Datasource datasource = datasourceCRUDService.read(datasourceId)
                     .orElseThrow(() -> new IdNotExistentOnDBException("Datasource with id " + datasourceId + " does not exist on DB"));
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Checking connection", null);
+            updateDatasourceStatus(datasourceId, "Checking connection");
 
             String connectionError = connectionValidator.checkConnection(datasource);
             if (StringUtils.hasText(connectionError)) {
@@ -68,20 +68,20 @@ public class DatasourceImporterImpl implements DatasourceImporter {
 
             ExternalDBImporter externalDBImporter = externalDBImporterFactory.create(datasource);
             LOGGER.info("Deleting relations for DS {}", datasourceId);
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Removing previous relations", null);
+            updateDatasourceStatus(datasourceId, "Removing previous relations");
             relationsImporter.removeRelationsOfDatasource(datasourceId);
             LOGGER.info("Importing DS {} metadata", datasourceId);
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing metadata", null);
+            updateDatasourceStatus(datasourceId, "Importing metadata");
             Datasource savedDatasource = metadataImporter.importDatasourceMetadata(datasource, externalDBImporter,
                     resumingImport);
             LOGGER.info("Importing DS {} primary Keys", datasourceId);
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing primary keys", null);
+            updateDatasourceStatus(datasourceId, "Importing primary keys");
             primaryKeysImporter.importDatatablePks(savedDatasource, externalDBImporter);
             LOGGER.info("Importing DS {} data", datasourceId);
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Importing data.", null);
+            updateDatasourceStatus(datasourceId, "Importing data.");
             dataImporter.importOriginalData(savedDatasource, externalDBImporter);
             LOGGER.info("Creating relations for DS {} ", datasourceId);
-            updateDatasourceStatus(datasourceId,DatasourceStatus.READING, "Creating realtions", null);
+            updateDatasourceStatus(datasourceId, "Creating realtions");
             relationsImporter.importRelations(datasource, externalDBImporter);
         } catch (Exception e) {
             LOGGER.error(e.getMessage(), e);
@@ -89,8 +89,8 @@ public class DatasourceImporterImpl implements DatasourceImporter {
         }
     }
 
-    private void updateDatasourceStatus(Long datasourceId, DatasourceStatus status, String statusDetail, Integer lastImportedPage) {
-        rowbot2RestClient.updateDatasourceImportStatus(datasourceId, status.getDescription(), statusDetail);
+    private void updateDatasourceStatus(Long datasourceId, String statusDetail) {
+        rowbot2RestClient.updateDatasourceImportStatus(datasourceId, DatasourceStatus.READING.getDescription(), statusDetail);
     }
 
 }
