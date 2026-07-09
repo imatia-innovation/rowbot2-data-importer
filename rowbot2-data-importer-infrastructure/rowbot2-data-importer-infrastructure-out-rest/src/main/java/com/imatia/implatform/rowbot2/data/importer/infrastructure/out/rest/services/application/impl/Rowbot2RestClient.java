@@ -46,16 +46,15 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   public void externalDataSourceImportCallback(Long datasourceId, String status, String errorMessage) {
     try (HttpClient client = HttpClient.newHttpClient()) {
       HttpRequest request = buildCallBackRequest(datasourceId, status, errorMessage);
-      HttpResponse<String> response = client.send(
-          request,
-          HttpResponse.BodyHandlers.ofString()
-      );
+      client.sendAsync(request,HttpResponse.BodyHandlers.ofString())
+              .thenAccept(response -> logger.debug("Datasource callback response status: {}", response.statusCode()))
+              .exceptionally(ex -> {
+                  logger.error("Error updating datasource {}. Error: {}", datasourceId, ex.getMessage(), ex);
+                  return null;
+              });
 
-      logger.debug("Datasource callback response status: {}", response.statusCode());
-
-    } catch (IOException | InterruptedException | URISyntaxException e) {
-      logger.error("Error updating datasource " + datasourceId + ". Error: " + e.getMessage(),
-          e);
+    } catch (IOException | URISyntaxException e) {
+        logger.error("Error updating datasource {}. Error: {}", datasourceId, e.getMessage(), e);
     }
   }
 
@@ -63,15 +62,15 @@ public class Rowbot2RestClient implements IRowbot2RestClient {
   public void updateDatasourceImportStatus(Long datasourceId, String status, String errorMessage) {
     try (HttpClient client = HttpClient.newHttpClient()) {
       HttpRequest request = buildUpdateRequest(datasourceId, status, errorMessage);
-      HttpResponse<String> response = client.send(
-              request,
-              HttpResponse.BodyHandlers.ofString()
-      );
-      logger.debug("Datasource update status response status: {}", response.statusCode());
-
-    } catch (IOException | InterruptedException | URISyntaxException e) {
-      logger.error("Error updating datasource " + datasourceId + ". Error: " + e.getMessage(),
-              e);
+      client.sendAsync(request,HttpResponse.BodyHandlers.ofString())
+              .thenAccept(resp ->
+                      logger.debug("Datasource update status response status: {}", resp.statusCode()))
+              .exceptionally(ex -> {
+                  logger.error("Error updating datasource {}. Error: {}", datasourceId, ex.getMessage(), ex);
+                  return null;
+              });
+    } catch (IOException | URISyntaxException e) {
+        logger.error("Error updating datasource {}. Error: {}", datasourceId, e.getMessage(), e);
     }
   }
 
