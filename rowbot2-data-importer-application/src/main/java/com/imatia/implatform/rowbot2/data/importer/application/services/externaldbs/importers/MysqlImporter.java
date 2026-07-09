@@ -17,10 +17,6 @@ import java.util.Locale;
 public class MysqlImporter extends AbstractJDBCImporter {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MysqlImporter.class);
-    private final String TIMEOUT_KEY = "${importers.mysql.timeout}";
-
-    @Value(TIMEOUT_KEY)
-    private String SOCKET_TIMEOUT;
 
     public MysqlImporter(Datasource datasource) {
         super(datasource);
@@ -38,7 +34,7 @@ public class MysqlImporter extends AbstractJDBCImporter {
             ds.setUseCursorFetch(true);
             ds.setConnectTimeout(LOGIN_ATTEMP_TIMEOUT);
             ds.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
-            ds.setSocketTimeout(Integer.parseInt(SOCKET_TIMEOUT) * 1000);
+            ds.setSocketTimeout(300 * 1000);
         } catch (SQLException e) {
             LOGGER.error("Error while setting connect timeout", e);
         }
