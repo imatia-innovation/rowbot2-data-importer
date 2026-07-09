@@ -5,6 +5,7 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -16,6 +17,11 @@ import java.util.Locale;
 public class MysqlImporter extends AbstractJDBCImporter {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MysqlImporter.class);
+    private final String TIMEOUT_KEY = "${importers.mysql.timeout}";
+
+    @Value(TIMEOUT_KEY)
+    private String SOCKET_TIMEOUT;
+
     public MysqlImporter(Datasource datasource) {
         super(datasource);
     }
@@ -32,7 +38,7 @@ public class MysqlImporter extends AbstractJDBCImporter {
             ds.setUseCursorFetch(true);
             ds.setConnectTimeout(LOGIN_ATTEMP_TIMEOUT);
             ds.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
-            ds.setSocketTimeout(LOGIN_ATTEMP_TIMEOUT * 1000);
+            ds.setSocketTimeout(Integer.parseInt(SOCKET_TIMEOUT) * 1000);
         } catch (SQLException e) {
             LOGGER.error("Error while setting connect timeout", e);
         }

@@ -147,7 +147,8 @@ jvmOptions: "-Xmx3g -Xms512m"  ## adjust according to pod requests
 
 importers:
   page_size: 1000
-
+  mysql:
+    timeout: 300
 retries:
   default:
     max_attempts: 5
