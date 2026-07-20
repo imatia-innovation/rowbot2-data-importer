@@ -6,7 +6,7 @@ image:
   pullPolicy: IfNotPresent
   ## provided as basic setup. replace as needed
   repository: 179934523585.dkr.ecr.eu-west-3.amazonaws.com/rowbot2-data-importer
-  version: dev.0.0.1-SNAPSHOT.28222559181.1
+  version: dev.1.7.0.29742903373.1
 #imagePullSecrets: ["ecr-cred"] # uncomment to use when not aws clusters. Secret will be provided
 nameOverride: ""
 fullnameOverride: ""
@@ -83,10 +83,8 @@ service:
   internalPort: 8080 # must match your application port
 ingress:
   enabled: true
-  class: nginx
+  ingressClassName: traefik
   annotations:
-    kubernetes.io/ingress.class: nginx
-    kubernetes.io/tls-acme: "true"
     cert-manager.io/cluster-issuer: cert-manager-letsencrypt-production-route53
   host: databench-importer.dev.imatia.cloud
   tls:
@@ -149,6 +147,8 @@ jvmOptions: "-Xmx3g -Xms512m"  ## adjust according to pod requests
 
 importers:
   page_size: 1000
+  mysql:
+    timeout: 5
 
 retries:
   default:

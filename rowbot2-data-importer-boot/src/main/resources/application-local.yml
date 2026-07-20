@@ -18,6 +18,8 @@ importers:
   metadata:
     samplesPerColumn: 5
     sampleLength: 15
+  mysql:
+    timeout: 5
 retries:
   default:
     max_attempts: 5

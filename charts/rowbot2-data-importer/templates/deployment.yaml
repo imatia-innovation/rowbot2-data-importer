@@ -177,6 +177,8 @@ spec:
         {{- end }}
           - name: IMPORTERS_PAGE_SIZE
             value: "{{ .Values.importers.page_size }}"
+          - name: IMPORTERS_MYSQL_TIMEOUT
+            value: "{{ .Values.importers.mysql.timeout }}"
           - name: RETRIES_DEFAULT_MAX_ATTEMPTS
             value: "{{ .Values.retries.default.max_attempts }}"
           - name: RETRIES_DEFAULT_MS_TO_RETRY

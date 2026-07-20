@@ -34,6 +34,8 @@ importers:
   metadata:
     samplesPerColumn: 5
     sampleLength: 15
+  mysql:
+    timeout: ${IMPORTERS_MYSQL_TIMEOUT}
 retries:
   default:
     max_attempts: ${RETRIES_DEFAULT_MAX_ATTEMPTS}

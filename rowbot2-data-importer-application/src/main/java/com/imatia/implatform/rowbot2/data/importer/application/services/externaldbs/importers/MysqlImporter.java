@@ -5,6 +5,7 @@ import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.mysql.cj.jdbc.MysqlDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 
 import javax.sql.DataSource;
 import java.sql.SQLException;
@@ -16,6 +17,7 @@ import java.util.Locale;
 public class MysqlImporter extends AbstractJDBCImporter {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MysqlImporter.class);
+
     public MysqlImporter(Datasource datasource) {
         super(datasource);
     }
@@ -23,20 +25,24 @@ public class MysqlImporter extends AbstractJDBCImporter {
     @Override
     protected DataSource buildDataSource() {
         MysqlDataSource ds = new MysqlDataSource();
-
         ds.setServerName(datasource.getUrl());
         ds.setPortNumber(datasource.getPort());
         ds.setUser(datasource.getUsername());
         ds.setPassword(datasource.getPass());
         ds.setDatabaseName(datasource.getDbname());
         try {
+            ds.setUseCursorFetch(true);
             ds.setConnectTimeout(LOGIN_ATTEMP_TIMEOUT);
             ds.setLoginTimeout(LOGIN_ATTEMP_TIMEOUT);
-            ds.setSocketTimeout(LOGIN_ATTEMP_TIMEOUT * 1000);
+            ds.setSocketTimeout(300 * 1000);
         } catch (SQLException e) {
             LOGGER.error("Error while setting connect timeout", e);
         }
         return ds;
+    }
+
+    private String getConfigurationVariables(){
+        return "?useCursorFetch=true";
     }
 
     @Override
@@ -72,11 +78,10 @@ public class MysqlImporter extends AbstractJDBCImporter {
 
     @Override
     public String getRowCountQuery(String originalTableName) {
-        String qualifiedTableName = getQualifiedTableName(originalTableName);
         return "SELECT table_rows as " + ROW_COUNT_ALIAS + "\n" +
                 "FROM information_schema.tables\n" +
                 "WHERE table_schema = DATABASE()\n" +
-                "  AND table_name = '" + qualifiedTableName + "';";
+                "  AND table_name = '" + originalTableName + "';";
     }
 
     public String getSlowRowCountQuery(String originalTableName) {

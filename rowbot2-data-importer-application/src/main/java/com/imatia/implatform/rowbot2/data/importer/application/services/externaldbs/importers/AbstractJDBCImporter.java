@@ -76,6 +76,11 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         return this.currentConnection;
     }
 
+    private void refreshConnection() throws SQLException{
+        this.currentConnection.close();
+        this.currentConnection = sqlDataSource.getConnection();
+    }
+
     public String checkConnection(){
         try(Connection connection = getConnection()) {
             return null;
@@ -142,6 +147,11 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
                     startingPageIndex
             );
         }catch(SQLException e){
+            try {
+                refreshConnection();
+            } catch (SQLException refreshEx) {
+                LOGGER.error("Error refreshing connection after SQLException: {}", refreshEx.getMessage());
+            }
             throw new RowbotDBReadException("There was a problem trying to retrieve datatable: " + datatable.getOriginalTableName(), e);
         }
     }
@@ -169,7 +179,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         String tableName = datatable.getOriginalTableName();
         try (Connection connection = getConnection()) {
             return tryFastCount(connection, tableName);
-        } catch (SQLException fastEx) {
+        } catch (SQLException|RowbotRuntimeException fastEx) {
             LOGGER.warn(
                     "Fast row count failed for table {}. Falling back. Error: {}",
                     tableName,
@@ -177,7 +187,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
             );
             try (Connection connection = getConnection()) {
                 return trySlowCount(connection, tableName);
-            } catch (SQLException slowEx) {
+            } catch (SQLException|RowbotRuntimeException slowEx) {
                 throw new RowbotDBReadException(
                         "Could not read row count for table: " + tableName,
                         slowEx
@@ -208,7 +218,7 @@ public abstract class AbstractJDBCImporter implements ExternalDBImporter {
         if (rs.next()) {
             return rs.getInt(ROW_COUNT_ALIAS);
         }
-        return 0;
+        throw new RowbotRuntimeException("Empty result trying to count the rows of the table");
     }
 
 

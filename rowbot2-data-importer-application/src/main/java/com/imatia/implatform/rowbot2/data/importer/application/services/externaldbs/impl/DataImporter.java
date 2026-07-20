@@ -9,19 +9,26 @@ import com.imatia.implatform.rowbot2.data.importer.application.services.external
 import com.imatia.implatform.rowbot2.data.importer.application.services.internaldb.ImportedDbClient;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datasource;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.Datatable;
+import com.imatia.implatform.rowbot2.data.importer.domain.model.enums.DatasourceStatus;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalColumnDescription;
 import com.imatia.implatform.rowbot2.data.importer.domain.model.externaldatabase.ExternalTableDescription;
+import com.imatia.implatform.rowbot2.data.importer.infrastructure.out.rest.services.application.api.IRowbot2RestClient;
 import org.apache.logging.log4j.util.Strings;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component
@@ -35,21 +42,23 @@ public class DataImporter {
     private ImportedDbClient importedDbClient;
 
     @Autowired
-    private DatasourceCRUDService datasourceCRUDService;
+    IRowbot2RestClient rowbot2RestClient;
 
     @Autowired
     private DatatableService datatableService;
 
-    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(DataImporter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataImporter.class);
 
     public void importOriginalData(Datasource datasource, ExternalDBImporter externalDBImporter){
         LOGGER.debug("Importing {} tables for DS({}) {}", datasource.getTables().size(), datasource.getId(),datasource.getName());
-        datasource.getTables().stream()
+        List<Datatable> tables = datatableService.findByDatasourceId(datasource.getId()).stream()
                 .sorted(Comparator.comparing(Datatable::getOriginalTableName))
                 .filter(datatable-> (datasource.getLastImportedTableName()==null ||
                                 datatable.getOriginalTableName().compareTo(datasource.getLastImportedTableName())>=0))
-                .forEach(datatable ->{
-                    importOriginalDatatable(datasource, externalDBImporter, datatable,datasource.getTables().indexOf(datatable),datasource.getTables().size());
+                .toList();
+        IntStream.range(0, tables.size())
+                .forEach(i ->{
+                    importOriginalDatatable(datasource, externalDBImporter, tables.get(i),i,tables.size());
                 });
     }
 
@@ -71,6 +80,7 @@ public class DataImporter {
                          externalDBImporter.getTableDataPaged(datatable, importStatus.getAlreadyImportedRows(), datasource.getMaxRows(), pageSize, importStatus.getNextPageIndex())) {
 
                 for (DbReadChunk<Map<String, ?>> dbReadChunk : (Iterable<DbReadChunk<Map<String, ?>>>) contentStream::iterator) {
+                    memmoryMonitor();
                     LOGGER.debug("DS({}): {}, Table: {} ({} of {}), Page {} of {} - inserting...",
                             datasource.getId(), datasource.getName(), datatable.getOriginalTableName(),
                             datatableIndex, totalDatatables, importStatus.getNextPageIndex(), totalPages);
@@ -80,7 +90,7 @@ public class DataImporter {
                     String statusDescription = String.format("Importing table %s (%d of %d), page %d of %d",
                             datatable.getOriginalTableName(), datatableIndex, totalDatatables,
                             importStatus.getNextPageIndex(), totalPages);
-                    //datasourceCRUDService.updateLastImportedPage(datasource.getId(),statusDescription, datatable.getOriginalTableName(), importStatus.getNextPageIndex());
+                    rowbot2RestClient.updateDatasourceImportStatus(datasource.getId(), DatasourceStatus.READING.getDescription(), statusDescription);
 
                     importStatus.setAlreadyImportedRows(importStatus.getAlreadyImportedRows() + dbReadChunk.getTotalItems());
                     importStatus.setNextPageIndex(importStatus.getNextPageIndex() +1);
@@ -93,7 +103,12 @@ public class DataImporter {
         });
     }
 
+    private void memmoryMonitor(){
+        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage heap = memoryMXBean.getHeapMemoryUsage();
 
+        LOGGER.debug("Memory monitor. HEAP: {}",heap);
+    }
 
 
     private boolean isFirstPageOfTable(ImportStatus importStatus) {
