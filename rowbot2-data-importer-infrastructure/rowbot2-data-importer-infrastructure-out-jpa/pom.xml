@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.imatia.implatform.rowbot2</groupId>
         <artifactId>rowbot2-data-importer-infrastructure</artifactId>
-        <version>0.0.1-SNAPSHOT</version>
+        <version>1.7.0</version>
     </parent>
 
     <artifactId>rowbot2-data-importer-infrastructure-out-jpa</artifactId>
