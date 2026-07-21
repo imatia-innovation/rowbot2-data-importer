@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "fullname" . }}-ziti-config
+data:
+  ziti-tunnel.yml: |
+    dns:
+      enabled: true
+      listenAddress: "127.0.0.1:53"
+      upstreamResolvers:
+        - 172.20.0.10   # CoreDNS del cluster
+        - 8.8.8.8       # DNS público
+    intercept:
+      tproxy: true

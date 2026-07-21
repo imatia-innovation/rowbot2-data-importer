@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-config
+data:
+  Corefile: |
+    assuria:53 {
+        forward . 127.0.0.1:5053
+        cache 30
+        log
+    }
+
+    cognition:53 {
+        forward . 127.0.0.1:5053
+        cache 30
+        log
+    }
+    
+    postgres:53 {
+        forward . 127.0.0.1:5053
+        cache 30
+        log
+    }
+    .:53 {
+        forward . 172.20.0.10
+        cache 30
+        log
+    }
