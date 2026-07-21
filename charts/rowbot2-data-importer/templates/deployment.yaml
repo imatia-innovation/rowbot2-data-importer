@@ -32,7 +32,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
     {{- if .Values.storage.enabled }}
       volumes:
-        - name: data
+        - name: volume-data-{{ include "fullname" . }}
           persistentVolumeClaim:
             claimName: {{ include "fullname" . }}-pvc
     {{- end }}
@@ -44,7 +44,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
         {{- if .Values.storage.enabled }}
           volumeMounts:
-            - name: data
+            - name: volume-data-{{ include "fullname" . }}
               mountPath: {{ .Values.storage.mountPath }}
         {{- end }}
         {{- if .Values.configmap.enabled }}
