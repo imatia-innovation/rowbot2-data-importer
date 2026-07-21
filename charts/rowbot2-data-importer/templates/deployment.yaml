@@ -32,7 +32,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
     {{- if .Values.storage.enabled }}
       volumes:
-        - name: rowbot2-data-importer-pvc
+        - name: data
           persistentVolumeClaim:
             claimName: {{ include "fullname" . }}-pvc
     {{- end }}
@@ -44,7 +44,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
         {{- if .Values.storage.enabled }}
           volumeMounts:
-            - name: rowbot2-data-importer-pvc
+            - name: data
               mountPath: {{ .Values.storage.mountPath }}
         {{- end }}
         {{- if .Values.configmap.enabled }}
